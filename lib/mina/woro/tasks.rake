@@ -43,6 +43,8 @@ namespace :woro do
     login_gist = prompt "Login to Gist/Github for private Woro tasks (Yes/No):"
     if %w(yes y).include? login_gist
       Gist.login!
+    else
+      access_token = prompt "Secure gists via Access Token:"
     end
 
     # create Gist with welcome file
@@ -69,6 +71,22 @@ namespace :woro do
 
   desc 'Run Woro task remotely'
   task :run do
+    task_file = ENV['task']
+    full_task_file_name = task_file #TODO
+    match = /([a-f0-9]+)_(\d{14})_(\S+)/.match(full_task_file_name)
+    gist_id = match[0]
+
+    gist = retrieve_gist gist_id
+    raw_url = gist['files'].first[1]['raw_url']
+    retrieve_raw raw_url
+
+    # take raw and execute as mina task
+
+    # create rake task
+
+    # invoke rake task
+
+    #delete #rake task
 
   end
 

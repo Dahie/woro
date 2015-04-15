@@ -5,9 +5,19 @@ module Mina
   module Woro
     class Gister
 
-
-
       class << self
+
+        def retrieve_gist(gist_id)
+          service_url = "https://api.github.com/gists/#{gist_id}"
+          response = Net::HTTP.get_response(service_url)
+          JSON.parse(response.body)
+        end
+
+        def retrieve_raw(service_url)
+          response = Net::HTTP.get_response(service_url)
+          response.body
+        end
+
 
         def create_initial_gist
           app_name = Rails.application.name
