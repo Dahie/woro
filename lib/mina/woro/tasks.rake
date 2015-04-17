@@ -54,11 +54,11 @@ namespace :woro do
 
     # create Gist with welcome file
     # additional tasks will be added to this first gist
-    #app_name = Rails.application.class.parent_name
-    result = Mina::Woro::Gister.create_initial_gist('TestApp')
+    app_name = fetch(:app_name, 'TestApp') #Rails.application.class.parent_name
+    result = Mina::Woro::Gister.create_initial_gist(app_name)
 
     puts "add this to your deploy.rb:"
-    puts "set :woro_token, '#{result['id'].to_json}'"
+    puts "set :woro_token, '#{result['id']}'"
 
     # safe in config
 
