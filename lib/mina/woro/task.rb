@@ -33,7 +33,7 @@ module Mina
       end
 
       def read_template_file
-        File.read(file_path)
+        File.read(File.dirname(__FILE__) +"/templates/task.rake")
       end
 
       def read_task_file
@@ -41,7 +41,7 @@ module Mina
       end
 
       def push
-        Gist.multi_gist({ file_name => read_file_content },
+        Gist.multi_gist({ file_name => read_task_file },
                          public: false,
                          update: gist_id,
                          output: :all)

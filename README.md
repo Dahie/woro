@@ -29,10 +29,10 @@ $ gem install woro
 Require `mina/woro` in your `config/deploy.rb`:
 
 ```rb
-require 'mina/woro'
 require 'mina/bundler'
 require 'mina/rails'
 require 'mina/git'
+require 'mina/woro'
 
 ...
 
@@ -49,37 +49,48 @@ end
 Then run:
 
 ```shell
-$ bundle exec mina woro:init
+$ mina woro:init
 ```
 
-This will create `lib/woro_tasks/` folder.
+This will create `lib/woro_tasks/` folder and `lib/tasks/woro.rake`.
 Here the Woro task files are stored and edited locally.
 
-Once you are done and want to execute them on the remote system, you have to push them online.
-
 ```shell
-$ mina woro:push task=20150112_cleanup
+$ mina woro:new task=cleanup_users
 ```
 
-Attention, depending on whether you set up a Gist/Github login on
-initialiazation. These tasks are online anonymous, but public, or
-private under the specified Github account.
+Can be used to create the template for a new task in `lib/tasks/`.
 
-
-To run a task remotely, specify the task:
+The task itself is a regular rake-task in the woro-namespace. You can test it locally using rake:
 
 ```shell
-$ mina woro:run task=20150112_cleanup
+$ rake woro:cleanup_users
+```
+
+Once you are done writing the task and you want to execute it on the remote system.
+First you have to push them online.
+
+```shell
+$ mina woro:push task=cleanup_users
+```
+
+_Attention, depending on whether you set up a Gist/Github login on
+initialization. These tasks are online anonymous, but public, or
+private under the specified Github account._
+
+
+Now, to run a task remotely, specify the task:
+
+```shell
+$ mina woro:run task=cleanup_users
 ```
 
 
-## Configuration
+Or do pushing and running in one step:
 
-* `tasks` - array of stages names, the default is the name of all `*.rb` files from `tasks_dir`
-* `tasks_dir` - stages files directory, the default is `lib/woro_tasks`
-
-
-
+```shell
+$ mina woro:execute task=cleanup_users
+```
 
 ## Contributing
 
