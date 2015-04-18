@@ -1,11 +1,6 @@
 require 'mina/woro/gister'
 require 'mina/woro/task'
 
-def _tasks_dir
-  #fetch(:tasks_dir, 'lib/woro_tasks')
-  'lib/woro_tasks'
-end
-
 def prompt(*args)
   print(*args)
   STDIN.gets.chomp
@@ -89,6 +84,11 @@ namespace :woro do
 
   desc 'List all remote Woro tasks'
   task :list do
-    # TODO
+    Mina::Woro::Gister.get_list_of_files(fetch(:woro_token)).each do |file_name, data|
+      if file_name.include? '.rake'
+        match = data['content'].match(/desc ['"]([a-zA-Z0-9\s]*)['"]/)
+        puts "#{file_name.split('.rake').first}  # #{match[1]}"
+      end
+    end
   end
 end

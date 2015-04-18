@@ -2,7 +2,7 @@
 
 Write once, run once.
 
-Manage one-time remote tasks in your rails project.
+Manage one-time remote tasks in your Rails project.
 Plugins with Mina that adds support for rake tasks hosted as gists.
 
 Say you have a data migration to perform on a remote server. The procedure is too complex to just do it in the remote console. Using database migration is evil. A rake task would be nice, but checking this in with the regular repository adds clutter, as you know you will only run this once.

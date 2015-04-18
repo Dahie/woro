@@ -7,7 +7,7 @@ module Mina
       attr_reader :task_name, :gist_id, :gist
 
       def initialize(gist_id, task_name)
-        @task_name = task_name.strip.split(' ').first
+        @task_name = task_name
         @gist_id = gist_id
       end
 
@@ -48,7 +48,7 @@ module Mina
       end
 
       def gist
-        @gist ||= retrieve_gist
+        @gist ||= Gister.retrieve_gist(gist_id)
       end
 
       def retrieve_file_data
@@ -62,14 +62,6 @@ module Mina
       def retrieve_raw_file
         response = Net::HTTP.get_response(raw_url)
         response.body
-      end
-
-      private
-
-      def retrieve_gist
-        service_url = "https://api.github.com/gists/#{gist_id}"
-        response = Net::HTTP.get_response(URI.parse(service_url))
-        JSON.parse(response.body)
       end
     end
   end
