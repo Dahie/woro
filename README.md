@@ -100,6 +100,18 @@ Or do pushing and running in one step:
 $ mina woro:execute task=cleanup_users
 ```
 
+To show a list of all uploaded tasks do:
+
+```shell
+$ mina woro:list
+```
+
+And finally you can download an existing task:
+
+```shell
+$ mina woro:pull task=cleanup_users
+```
+
 ## Contributing
 
 1. Fork it
