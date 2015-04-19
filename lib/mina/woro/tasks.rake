@@ -2,6 +2,10 @@ require 'ostruct'
 require 'mina/woro/gister'
 require 'mina/woro/task'
 
+def _tasks_dir
+  fetch(:tasks_dir, 'lib/woro_tasks')
+end
+
 def prompt(*args)
   print(*args)
   STDIN.gets.chomp
@@ -27,8 +31,6 @@ namespace :woro do
 
   desc 'Initialize new Woro repository'
   task :init do
-    FileUtils.mkdir_p _tasks_dir if !File.exists? _tasks_dir
-
     print status 'Configure Gist/Github access'
 
     login_gist = prompt "Login to Gist/Github for private Woro tasks (Yes/No):"
@@ -43,20 +45,21 @@ namespace :woro do
     app_name = fetch(:app_name, 'TestApp') #Rails.application.class.parent_name
     result = Mina::Woro::Gister.create_initial_gist(app_name)
 
-
     print status 'Setup in your project'
     print_stdout "add this to your deploy.rb:"
     print_stdout "set :woro_token, '#{result['id']}"
 
+    print status 'Create woro_tasks in lib/'
+    FileUtils.mkdir_p _tasks_dir if !File.exists? _tasks_dir
+
     print status 'Create woro.rake in lib/tasks/'
     FileUtils.cp(File.dirname(__FILE__) +"/templates/woro.rake", 'lib/tasks/')
-    print status 'Create woro_tasks in lib/'
-    FileUtils.mkdir('lib/woro_tasks')
   end
 
   desc 'Create new Woro task'
   task :new do
     check_presence_of_task_name
+    print_status "Create lib/woro_tasks/#{sanitized_task_name}.rake"
     Mina::Woro::Task.create(fetch(:woro_token), sanitized_task_name)
   end
 
@@ -66,12 +69,22 @@ namespace :woro do
     invoke :'woro:run'
   end
 
-  desc 'Push Woro task, updates existing'
+  desc 'Push Woro task to remote repository, updates existing'
   task :push do
     check_presence_of_task_name
     # Pushes a new woro task by given name to gist, this can be done multiple time.
     task = Mina::Woro::Task.new(fetch(:woro_token), sanitized_task_name)
+    print_status "Upload lib/woro_tasks/#{sanitized_task_name}.rake"
     task.push
+  end
+
+  desc 'Pull Woro task from remote repository'
+  task :pull do
+    check_presence_of_task_name
+    # Pulls the  woro task by given name to gist, this can be done multiple time.
+    task = Mina::Woro::Task.new(fetch(:woro_token), sanitized_task_name)
+    print_status "Download #{sanitized_task_name} to lib/woro_tasks/#{sanitized_task_name}.rake"
+    system "cd 'lib/tasks' && curl -O -# #{task.raw_url}"
   end
 
   desc 'Run Woro task remotely'
