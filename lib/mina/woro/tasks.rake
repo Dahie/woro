@@ -1,3 +1,4 @@
+require 'ostruct'
 require 'mina/woro/gister'
 require 'mina/woro/task'
 
@@ -15,6 +16,10 @@ def check_presence_of_task_name
     print_error('No taskname given.')
     raise 'No taskname given'
   end
+end
+
+def extract_description(data)
+  data['content'].match(/desc ['"]([a-zA-Z0-9\s]*)['"]/)[1]
 end
 
 # tasks available to mina to run remotely
@@ -84,11 +89,12 @@ namespace :woro do
 
   desc 'List all remote Woro tasks'
   task :list do
-    Mina::Woro::Gister.get_list_of_files(fetch(:woro_token)).each do |file_name, data|
-      if file_name.include? '.rake'
-        match = data['content'].match(/desc ['"]([a-zA-Z0-9\s]*)['"]/)
-        puts "#{file_name.split('.rake').first}  # #{match[1]}"
-      end
+    files = Mina::Woro::Gister.get_list_of_files(fetch(:woro_token))
+    tasks = files.map { |file_name, data| OpenStruct.new(name_with_args: file_name.split('.rake').first, comment: extract_description(data)) if file_name.include? '.rake' }
+    tasks.compact!
+    width ||= tasks.map { |t| t.name_with_args.length }.max || 10
+    tasks.each do |t|
+      puts "  #{name} %-#{width}s   # %s" % [ t.name_with_args, t.comment ]
     end
   end
 end
