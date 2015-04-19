@@ -1,6 +1,6 @@
 require 'ostruct'
-require 'mina/woro/gister'
-require 'mina/woro/task'
+require 'woro/gister'
+require 'woro/task'
 
 def _tasks_dir
   fetch(:tasks_dir, 'lib/woro_tasks')
@@ -43,7 +43,7 @@ namespace :woro do
     # create Gist with welcome file
     # additional tasks will be added to this first gist
     app_name = fetch(:app_name, 'TestApp') #Rails.application.class.parent_name
-    result = Mina::Woro::Gister.create_initial_gist(app_name)
+    result = Woro::Gister.create_initial_gist(app_name)
 
     print status 'Setup in your project'
     print_stdout "add this to your deploy.rb:"
@@ -60,7 +60,7 @@ namespace :woro do
   task :new do
     check_presence_of_task_name
     print_status "Create lib/woro_tasks/#{sanitized_task_name}.rake"
-    Mina::Woro::Task.create(fetch(:woro_token), sanitized_task_name)
+    Woro::Task.create(fetch(:woro_token), sanitized_task_name)
   end
 
   desc 'Push and run Woro task remotely'
@@ -73,7 +73,7 @@ namespace :woro do
   task :push do
     check_presence_of_task_name
     # Pushes a new woro task by given name to gist, this can be done multiple time.
-    task = Mina::Woro::Task.new(fetch(:woro_token), sanitized_task_name)
+    task = Woro::Task.new(fetch(:woro_token), sanitized_task_name)
     print_status "Upload lib/woro_tasks/#{sanitized_task_name}.rake"
     task.push
   end
@@ -82,7 +82,7 @@ namespace :woro do
   task :pull do
     check_presence_of_task_name
     # Pulls the  woro task by given name to gist, this can be done multiple time.
-    task = Mina::Woro::Task.new(fetch(:woro_token), sanitized_task_name)
+    task = Woro::Task.new(fetch(:woro_token), sanitized_task_name)
     print_status "Download #{sanitized_task_name} to lib/woro_tasks/#{sanitized_task_name}.rake"
     system "cd 'lib/tasks' && curl -O -# #{task.raw_url}"
   end
@@ -90,7 +90,7 @@ namespace :woro do
   desc 'Run Woro task remotely'
   task run: :environment do
     check_presence_of_task_name
-    task = Mina::Woro::Task.new(fetch(:woro_token), sanitized_task_name)
+    task = Woro::Task.new(fetch(:woro_token), sanitized_task_name)
 
     print_status "Execute #{sanitized_task_name} remotely"
     in_directory "#{app_path}" do
@@ -102,7 +102,7 @@ namespace :woro do
 
   desc 'List all remote Woro tasks'
   task :list do
-    files = Mina::Woro::Gister.get_list_of_files(fetch(:woro_token))
+    files = Woro::Gister.get_list_of_files(fetch(:woro_token))
     tasks = files.map { |file_name, data| OpenStruct.new(name_with_args: file_name.split('.rake').first, comment: extract_description(data)) if file_name.include? '.rake' }
     tasks.compact!
     width ||= tasks.map { |t| t.name_with_args.length }.max || 10

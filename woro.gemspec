@@ -1,11 +1,11 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'mina/woro/version'
+require 'woro/version'
 
 Gem::Specification.new do |spec|
   spec.name          = "woro"
-  spec.version       = Mina::Woro::VERSION
+  spec.version       = Woro::VERSION
   spec.authors       = ["Daniel Senff"]
   spec.email         = ["mail@danielsenff.de"]
   spec.summary       = %q{Write once, run once. One-time migration task management on remote servers through mina.}
