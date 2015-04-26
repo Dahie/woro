@@ -55,7 +55,7 @@ end
 Then run:
 
 ```shell
-$ mina woro:init
+$ woro init
 ```
 
 This will create `lib/woro_tasks/` folder and `lib/tasks/woro.rake`.
@@ -64,7 +64,7 @@ Here the Woro task files are stored and edited locally.
 ## Usage
 
 ```shell
-$ mina woro:new task=cleanup_users
+$ woro new cleanup_users
 ```
 
 Can be used to create the template for a new task in `lib/tasks/`.
@@ -79,7 +79,7 @@ Once you are done writing the task and you want to execute it on the remote syst
 First you have to push them online.
 
 ```shell
-$ mina woro:push task=cleanup_users
+$ woro push cleanup_users
 ```
 
 _Attention, depending on whether you set up a Gist/Github login on

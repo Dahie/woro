@@ -21,6 +21,10 @@ module Woro
       task
     end
 
+    def self.sanitize_task_name(task_name)
+      task_name.strip.split(' ').first
+    end
+
     # File name based on the task's name.
     # @return [String]
     def file_name
@@ -31,6 +35,11 @@ module Woro
     # @return [String]
     def file_path
       "lib/woro_tasks/#{file_name}"
+    end
+
+    # Returns true if a task of this name exists locally
+    def exists?
+      File.exists? file_path
     end
 
     # Creates a new rake task file at the file path (see #file_path).

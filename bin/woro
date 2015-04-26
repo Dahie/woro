@@ -1,0 +1,82 @@
+#!/usr/bin/env ruby
+# coding: utf-8
+
+require 'commander/import'
+require 'woro'
+
+program :name, 'woro'
+program :version, Woro::VERSION
+program :description, 'Write once, run once - Management of one-time remote tasks'
+
+
+#list = Woro::List.new
+
+#default_command :list
+
+command :init do |c|
+  c.syntax      = 'woro init [options]'
+  c.description = 'Initialize Woro in the current Rails directory and setup Gist collection'
+  c.option '--[no-]force', 'force overwrite of existing config file'
+  c.action do |args, options|
+
+    if agree 'Login to Gist/Github for private Woro tasks (Yes/No)?  '
+      Gist.login!
+    #else
+    #  access_token = ask "Secure gists via Access Token:"
+    end
+
+    # create Gist with welcome file
+    # additional tasks will be added to this first gist
+    #app_name = fetch(:app_name, 'TestApp') #Rails.application.class.parent_name
+    app_name = ask 'Application name: '
+    result = Woro::Gister.create_initial_gist(app_name)
+    gist_id = result['id']
+
+    FileUtils.mkdir_p File.dirname(Woro::Configuration.config_file) if !File.exists? File.dirname(Woro::Configuration.config_file)
+    config = Woro::Configuration.save(app_name: app_name,
+                                      adapter: { gist: {gist_id: gist_id } })
+    say 'Initialized at `./config/woro.yml`'
+
+    say 'Create lib/woro_tasks/'
+    FileUtils.mkdir_p config.woro_task_dir if !File.exists? config.woro_task_dir
+
+    say 'Create woro.rake in lib/tasks/'
+    FileUtils.mkdir_p config.rake_task_dir if !File.exists? config.rake_task_dir
+    FileUtils.cp(File.dirname(__FILE__) + '/../lib/woro/templates/woro.rake', config.rake_task_dir)
+  end
+end
+
+command :new do |c|
+  c.syntax      = 'woro create <task> [options]'
+  c.summary     = 'Create new tasks'
+  c.description = 'Creates one or more new templated Rake tasks'
+  c.example 'Create task called "cleanup"', 'woro new cleanup'
+  c.example 'Creates tasks called "cleanup", "fix1" and "fix2"', 'woro new cleanup fix1 fix2'
+  c.action do |args, options|
+    args.each do |arg|
+      #abort 'task already created' if task.exists?
+      config = Woro::Configuration.load
+      sanitized_task_name = Woro::Task.sanitize_task_name(arg)
+      task = Woro::Task.create(config.adapter[:gist][:gist_id], sanitized_task_name)
+      say "Created lib/woro_tasks/#{sanitized_task_name}.rake"
+    end
+  end
+end
+
+command :push do |c|
+  c.syntax      = 'woro push <task> [options]'
+  c.summary     = 'Push tasks to remote collection'
+  c.description = 'Pushes one or more local tasks to the remote collection'
+  c.example 'Pushes the task "cleanup" to the remote collection', 'woro push cleanup'
+  c.action do |args, options|
+    args.each do |arg|
+      config = Woro::Configuration.load
+      sanitized_task_name = Woro::Task.sanitize_task_name(arg)
+      # Pushes a new woro task by given name to gist, this can be done multiple time.
+      task = Woro::Task.new(config.adapter[:gist][:gist_id], sanitized_task_name)
+      result = task.push
+      say "Uploaded lib/woro_tasks/#{sanitized_task_name}.rake to #{result[:url]}"
+    end
+  end
+end
+
