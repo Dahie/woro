@@ -8,8 +8,8 @@ module Woro
     class << self
       # Creates an initial welcome gist on project setup
       # @param app_name [String] Name of the app is displayed in the initial welcome message
-      def create_initial_gist(app_name)
-        Gist.gist("Welcome to the Woro Task Repository for #{app_name}", filename: app_name)
+      def create_initial_gist(app_name, access_token=nil)
+        Gist.gist("Welcome to the Woro Task Repository for #{app_name}", filename: app_name, access_token: access_token)
       end
 
       # Retrieves metadata of the specified gist

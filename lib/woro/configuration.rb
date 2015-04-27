@@ -14,7 +14,7 @@ module Woro
 
     # Load configuration file or default_options. Passed options take precedence.
     def self.load(options = {})
-      user_options = options.reject{|k,v| ![:adapters, app_name].include? k}
+      user_options = options.reject{|k,v| ![:adapters, :app_name].include? k}
 
       if !(File.exists? config_file)
         File.open(config_file, 'w') { |file| YAML::dump(default_options, file) }
@@ -27,7 +27,7 @@ module Woro
 
     # Save configuration. Passed options take precendence over default_options.
     def self.save(options = {})
-      user_options = options.reject{|k,v| ![:adapters, app_name].include? k}
+      user_options = options.reject{|k,v| ![:adapters, :app_name].include? k}
       force_save = options.delete :force
 
       if !(File.exists? config_file) || force_save

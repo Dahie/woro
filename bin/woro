@@ -32,8 +32,8 @@ command :init do |c|
 
     if agree 'Login to Gist/Github for private Woro tasks (Yes/No)?  '
       Gist.login!
-    else
-      gen_access_token = agree "Secure gists via random access token?"
+    #else
+      #gen_access_token = agree "Secure gists via random access token?"
     end
 
 
@@ -48,14 +48,13 @@ command :init do |c|
       public: false
     }
     # TODO generate access token
-    gist_adapter[:access_token] = 'access_token' if gen_access_token
+    #gist_adapter[:access_token] = 'access_token' if gen_access_token
     adapters = { gist: gist_adapter }
 
     unless File.exists? File.dirname(Woro::Configuration.config_file)
       FileUtils.mkdir_p File.dirname(Woro::Configuration.config_file)
     end
-    config = Woro::Configuration.save(app_name: app_name,
-                                      adapters: adapters )
+    config = Woro::Configuration.save(adapters: adapters)
     say 'Initialized at `./config/woro.yml`'
 
     unless File.exists? config.woro_task_dir
@@ -78,7 +77,6 @@ command :new do |c|
   c.option '--[no-]force', 'force overwrite of existing task file'
   c.action do |args, options|
     args.each do |arg|
-      puts options.inspect
       config = Woro::Configuration.load
       task = Woro::Task.new(config.adapters[:gist][:gist_id], arg)
       force_overwrite = options.force
@@ -102,7 +100,7 @@ command :push do |c|
       task = Woro::Task.new(config.adapters[:gist][:gist_id], arg)
       if task.exists?
         result = task.push
-        say "Uploaded #{task.file_path} to #{result[:url]}"
+        say "Uploaded #{task.file_path} to #{result['url']}"
       else
         say "Task #{task.task_name} not found at #{task.file_path}"
       end
