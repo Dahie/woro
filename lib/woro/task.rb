@@ -7,7 +7,7 @@ module Woro
     attr_reader :task_name, :gist_id, :gist
 
     def initialize(gist_id, task_name)
-      @task_name = task_name
+      @task_name = Woro::Task.sanitize_task_name task_name
       @gist_id = gist_id
     end
 
@@ -34,7 +34,7 @@ module Woro
     # File name based on the task's filename (see #file_name).
     # @return [String]
     def file_path
-      "lib/woro_tasks/#{file_name}"
+      File.join('lib','woro_tasks', file_name)
     end
 
     # Returns true if a task of this name exists locally

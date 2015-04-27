@@ -3,14 +3,14 @@
 Write once, run once.
 
 Manage one-time remote tasks in your Rails project.
-Plugins with Mina that adds support for rake tasks hosted as gists.
+Plugins with Mina to add support for rake tasks hosted in remote collection, such as Gist.
 
-Say you have a data migration to perform on a remote server. The procedure is too complex to just do it in the remote console. Using database migration is evil. A rake task would be nice, but checking this in with the regular repository adds clutter, as you know you will only run this once.
-Woro offers a quick way of pushing rake tasks on the remote server, execute them and delete them instantly. Using Github's gist, you keep version control of the tasks and can share them with colleagues.
+Say you have a data migration to perform on a remote server. The procedure is too complex to just do it in the remote console and using database migrations would be evil. A rake task would be nice, but checking this in with the source code repository adds clutter, as you know you will only run this once.
+Woro offers a quick way of pushing rake tasks onto the remote server, execute them and delete them instantly. Using Github's gist, you keep version control of the tasks and can share them with colleagues.
 
-Woro helps you create rake task, that you can develop and run locally.
-Once you are ready, woro let's you push them online as a gist.
-Using a mina deployment setup, you these tasks are downloaded on the remote system, executing using rake and cleaned up afterwards.
+Woro helps you create rake tasks, that you can develop and run locally.
+Once you are ready, woro let's you push them online to a remote collection like Gist.
+Using a mina deployment setup, these tasks are downloaded on the remote system, executed by rake and cleaned up afterwards.
 
 ## Installation
 

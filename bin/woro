@@ -6,12 +6,23 @@ require 'woro'
 
 program :name, 'woro'
 program :version, Woro::VERSION
-program :description, 'Write once, run once - Management of one-time remote tasks'
+program :description, 'Write once, run once - Management of one-time remote tasks
+Plugins with Mina to add support for rake tasks hosted in remote collection, such as Gist.
 
+Say you have a data migration to perform on a remote server. The procedure is too complex
+to just do it in the remote console and using database migrations would be evil.
+A rake task would be nice, but checking this in with the source code repository
+adds clutter, as you know you will only run this once.
+Woro offers a quick way of pushing rake tasks onto the remote server, execute them
+and delete them instantly. Using Github\'s gist, you keep version control of the tasks
+and can share them with colleagues.
 
-#list = Woro::List.new
+Woro helps you create rake tasks, that you can develop and run locally.
+Once you are ready, woro let\'s you push them online to a remote collection like Gist.
+Using a mina deployment setup, these tasks are downloaded on the remote system,
+executed by rake and cleaned up afterwards.'
 
-#default_command :list
+default_command :list
 
 command :init do |c|
   c.syntax      = 'woro init [options]'
@@ -21,26 +32,38 @@ command :init do |c|
 
     if agree 'Login to Gist/Github for private Woro tasks (Yes/No)?  '
       Gist.login!
-    #else
-    #  access_token = ask "Secure gists via Access Token:"
+    else
+      gen_access_token = agree "Secure gists via random access token?"
     end
+
 
     # create Gist with welcome file
     # additional tasks will be added to this first gist
-    #app_name = fetch(:app_name, 'TestApp') #Rails.application.class.parent_name
     app_name = ask 'Application name: '
     result = Woro::Gister.create_initial_gist(app_name)
-    gist_id = result['id']
 
-    FileUtils.mkdir_p File.dirname(Woro::Configuration.config_file) if !File.exists? File.dirname(Woro::Configuration.config_file)
+    # configure adapters
+    gist_adapter = {
+      gist_id: result['id'],
+      public: false
+    }
+    # TODO generate access token
+    gist_adapter[:access_token] = 'access_token' if gen_access_token
+    adapters = { gist: gist_adapter }
+
+    unless File.exists? File.dirname(Woro::Configuration.config_file)
+      FileUtils.mkdir_p File.dirname(Woro::Configuration.config_file)
+    end
     config = Woro::Configuration.save(app_name: app_name,
-                                      adapter: { gist: {gist_id: gist_id } })
+                                      adapters: adapters )
     say 'Initialized at `./config/woro.yml`'
 
-    say 'Create lib/woro_tasks/'
-    FileUtils.mkdir_p config.woro_task_dir if !File.exists? config.woro_task_dir
+    unless File.exists? config.woro_task_dir
+      FileUtils.mkdir_p
+      say "Create #{config.woro_task_dir}"
+    end
 
-    say 'Create woro.rake in lib/tasks/'
+    say "Create woro.rake in #{config.rake_task_dir}"
     FileUtils.mkdir_p config.rake_task_dir if !File.exists? config.rake_task_dir
     FileUtils.cp(File.dirname(__FILE__) + '/../lib/woro/templates/woro.rake', config.rake_task_dir)
   end
@@ -52,13 +75,17 @@ command :new do |c|
   c.description = 'Creates one or more new templated Rake tasks'
   c.example 'Create task called "cleanup"', 'woro new cleanup'
   c.example 'Creates tasks called "cleanup", "fix1" and "fix2"', 'woro new cleanup fix1 fix2'
+  c.option '--[no-]force', 'force overwrite of existing task file'
   c.action do |args, options|
     args.each do |arg|
-      #abort 'task already created' if task.exists?
+      puts options.inspect
       config = Woro::Configuration.load
-      sanitized_task_name = Woro::Task.sanitize_task_name(arg)
-      task = Woro::Task.create(config.adapter[:gist][:gist_id], sanitized_task_name)
-      say "Created lib/woro_tasks/#{sanitized_task_name}.rake"
+      task = Woro::Task.new(config.adapters[:gist][:gist_id], arg)
+      force_overwrite = options.force
+      if !task.exists? || force_overwrite || agree("Overwrite existing #{task.file_path}?")
+        task.create_from_task_template
+        say "Created #{task.file_path}"
+      end
     end
   end
 end
@@ -70,13 +97,15 @@ command :push do |c|
   c.example 'Pushes the task "cleanup" to the remote collection', 'woro push cleanup'
   c.action do |args, options|
     args.each do |arg|
-      # TODO presence check
       config = Woro::Configuration.load
-      sanitized_task_name = Woro::Task.sanitize_task_name(arg)
       # Pushes a new woro task by given name to gist, this can be done multiple time.
-      task = Woro::Task.new(config.adapter[:gist][:gist_id], sanitized_task_name)
-      result = task.push
-      say "Uploaded lib/woro_tasks/#{sanitized_task_name}.rake to #{result[:url]}"
+      task = Woro::Task.new(config.adapters[:gist][:gist_id], arg)
+      if task.exists?
+        result = task.push
+        say "Uploaded #{task.file_path} to #{result[:url]}"
+      else
+        say "Task #{task.task_name} not found at #{task.file_path}"
+      end
     end
   end
 end
@@ -84,21 +113,18 @@ end
 command :pull do |c|
   c.syntax      = 'woro pull <task> [options]'
   c.summary     = 'Pull Woro task from remote repository'
-  c.description = 'Pushes one or more local tasks to the remote collection. Existing tasks by this name in the remote connection will be updated.'
-  c.example 'Pushes the task "cleanup" to the remote collection', 'woro push cleanup'
+  c.description = 'Pulls one task from the remote collection. Existing local tasks can be overwritten.'
+  c.example 'Pulls the task "cleanup" from the remote collection', 'woro pull cleanup'
   c.option '--[no-]force', 'force overwrite of existing task file'
   c.action do |args, options|
-    abort "invalid command. See 'woro help' for more information" unless args.empty?
-    # TODO check_presence_of_task_name
-    # TODO ask before overwrite
     config = Woro::Configuration.load
-    sanitized_task_name = Woro::Task.sanitize_task_name(args.first)
-
     # Pulls the  woro task by given name to gist, this can be done multiple time.
-    task = Woro::Task.new(config.adapter[:gist][:gist_id], sanitized_task_name)
-
-    system "cd '#{config.woro_task_dir}' && curl -O -# #{task.raw_url}"
-    say "Downloaded #{sanitized_task_name} to #{config.woro_task_dir}/#{sanitized_task_name}.rake"
+    task = Woro::Task.new(config.adapters[:gist][:gist_id], args.first)
+    force_save = options.force
+    if !task.exists? || force_overwrite || agree("Overwrite existing #{task.file_path}?")
+      system "cd '#{config.woro_task_dir}' && curl -O -# #{task.raw_url}"
+      say "Downloaded #{task.task_name} to #{task.file_path}"
+    end
   end
 end
 
@@ -110,9 +136,8 @@ command :list do |c|
   c.option '-a', '--all', 'List all tasks'
   c.action do |args, options|
     abort "invalid command. See 'woro help' for more information" unless args.empty?
-
     config = Woro::Configuration.load
-    files = Woro::Gister.get_list_of_files config.adapter[:gist][:gist_id]
+    files = Woro::Gister.get_list_of_files config.adapters[:gist][:gist_id]
     tasks = files.map { |file_name, data| OpenStruct.new(name_with_args: file_name.split('.rake').first, comment: Woro::Gister.extract_description(data)) if file_name.include? '.rake' }
     tasks.compact!
     width ||= tasks.map { |t| t.name_with_args.length }.max || 10
