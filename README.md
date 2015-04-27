@@ -87,29 +87,22 @@ initialization. These tasks are online anonymous, but public, or
 private under the specified Github account._
 
 
-Now, to run a task remotely, specify the task:
+Now, to run a task remotely using mina, specify the task:
 
 ```shell
 $ mina woro:run task=cleanup_users
 ```
 
-
-Or do pushing and running in one step:
-
-```shell
-$ mina woro:execute task=cleanup_users
-```
-
 To show a list of all uploaded tasks do:
 
 ```shell
-$ mina woro:list
+$ woro list
 ```
 
 And finally you can download an existing task:
 
 ```shell
-$ mina woro:pull task=cleanup_users
+$ woro pull cleanup_users
 ```
 
 ## Contributing
