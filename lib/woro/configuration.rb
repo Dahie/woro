@@ -4,11 +4,11 @@ include Commander::UI
 
 module Woro
   class Configuration
-    attr_reader :adapter
+    attr_reader :adapter, :woro_task_dir
 
     # Initialize configuration.
     def initialize(options = {})
-      @task_dir = 'lib/woro_tasks/'
+      @woro_task_dir = Configuration.woro_task_dir
       @adapter = options[:adapter]
     end
 

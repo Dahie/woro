@@ -65,11 +65,12 @@ end
 
 command :push do |c|
   c.syntax      = 'woro push <task> [options]'
-  c.summary     = 'Push tasks to remote collection'
-  c.description = 'Pushes one or more local tasks to the remote collection'
+  c.summary     = 'Push tasks to remote collection, updates existing tasks'
+  c.description = 'Pushes one or more local tasks to the remote collection. Existing tasks by this name in the remote connection will be updated.'
   c.example 'Pushes the task "cleanup" to the remote collection', 'woro push cleanup'
   c.action do |args, options|
     args.each do |arg|
+      # TODO presence check
       config = Woro::Configuration.load
       sanitized_task_name = Woro::Task.sanitize_task_name(arg)
       # Pushes a new woro task by given name to gist, this can be done multiple time.
@@ -79,4 +80,46 @@ command :push do |c|
     end
   end
 end
+
+command :pull do |c|
+  c.syntax      = 'woro pull <task> [options]'
+  c.summary     = 'Pull Woro task from remote repository'
+  c.description = 'Pushes one or more local tasks to the remote collection. Existing tasks by this name in the remote connection will be updated.'
+  c.example 'Pushes the task "cleanup" to the remote collection', 'woro push cleanup'
+  c.option '--[no-]force', 'force overwrite of existing task file'
+  c.action do |args, options|
+    abort "invalid command. See 'woro help' for more information" unless args.empty?
+    # TODO check_presence_of_task_name
+    # TODO ask before overwrite
+    config = Woro::Configuration.load
+    sanitized_task_name = Woro::Task.sanitize_task_name(args.first)
+
+    # Pulls the  woro task by given name to gist, this can be done multiple time.
+    task = Woro::Task.new(config.adapter[:gist][:gist_id], sanitized_task_name)
+
+    system "cd '#{config.woro_task_dir}' && curl -O -# #{task.raw_url}"
+    say "Downloaded #{sanitized_task_name} to #{config.woro_task_dir}/#{sanitized_task_name}.rake"
+  end
+end
+
+command :list do |c|
+  c.syntax      = 'woro [list|ls] [options]'
+  c.description = 'List tasks'
+  c.example 'List remote tasks', 'woro list'
+  c.example 'List all tasks', 'woro list --all'
+  c.option '-a', '--all', 'List all tasks'
+  c.action do |args, options|
+    abort "invalid command. See 'woro help' for more information" unless args.empty?
+
+    config = Woro::Configuration.load
+    files = Woro::Gister.get_list_of_files config.adapter[:gist][:gist_id]
+    tasks = files.map { |file_name, data| OpenStruct.new(name_with_args: file_name.split('.rake').first, comment: Woro::Gister.extract_description(data)) if file_name.include? '.rake' }
+    tasks.compact!
+    width ||= tasks.map { |t| t.name_with_args.length }.max || 10
+    tasks.each do |t|
+      puts "  %-#{width}s   # %s" % [ t.name_with_args, t.comment ]
+    end
+  end
+end
+alias_command :ls, :list
 

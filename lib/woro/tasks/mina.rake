@@ -15,11 +15,6 @@ namespace :woro do
     invoke :'woro:run'
   end
 
-  desc 'Push Woro task to remote repository, updates existing'
-  task :push do
-    check_presence_of_task_name
-
-  end
 
   desc 'Run Woro task remotely'
   task run: :environment do
@@ -31,17 +26,6 @@ namespace :woro do
       queue! "cd 'lib/tasks' && curl -O #{task.raw_url}"
       queue! "#{bundle_prefix} rake woro:#{Woro::Task.sanitized_task_name(ENV['task'])}"
       queue! "rm lib/tasks/#{task.file_name}"
-    end
-  end
-
-  desc 'List all remote Woro tasks'
-  task :list do
-    files = Woro::Gister.get_list_of_files(fetch(:woro_token))
-    tasks = files.map { |file_name, data| OpenStruct.new(name_with_args: file_name.split('.rake').first, comment: extract_description(data)) if file_name.include? '.rake' }
-    tasks.compact!
-    width ||= tasks.map { |t| t.name_with_args.length }.max || 10
-    tasks.each do |t|
-      puts "  #{name} %-#{width}s   # %s" % [ t.name_with_args, t.comment ]
     end
   end
 end

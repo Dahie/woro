@@ -21,6 +21,13 @@ module Woro
         JSON.parse(response.body)
       end
 
+      # Extract description from gist's data content string.
+      # @param data [Hash] gist data hash
+      # [String] description string
+      def extract_description(data)
+        data['content'].match(/desc ['"]([a-zA-Z0-9\s]*)['"]/)[1]
+      end
+
       # Returns the list of files included in the specified gist
       # @param gist_id [String] id of the gist
       # @return [Hash] List of files in the format { filename: { data }}
