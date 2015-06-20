@@ -76,10 +76,10 @@ $ rake woro:cleanup_users
 ```
 
 Once you are done writing the task and you want to execute it on the remote system.
-First you have to push them online.
+First you have to push them online, here to Gist.
 
 ```shell
-$ woro push cleanup_users
+$ woro push gist:cleanup_users
 ```
 
 _Attention, depending on whether you set up a Gist/Github login on
@@ -90,10 +90,10 @@ private under the specified Github account._
 Now, to run a task remotely using mina, specify the task:
 
 ```shell
-$ mina woro:run task=cleanup_users
+$ mina woro:run task=gist:cleanup_users
 ```
 
-To show a list of all uploaded tasks do:
+To show a list of all tasks uploaded to any collection do:
 
 ```shell
 $ woro list

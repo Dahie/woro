@@ -1,58 +1,24 @@
 require 'ostruct'
-require 'woro/gister'
-require 'woro/task'
+require 'woro'
 
 # Capistrano Recipes for managing woro tasks
-#
-# Add these callbacks to have the delayed_job process restart when the server
-# is restarted:
-#
-#   after "deploy:stop",    "delayed_job:stop"
-#   after "deploy:start",   "delayed_job:start"
-#   after "deploy:restart", "delayed_job:restart"
-#
-# If you want to use command line options, for example to start multiple workers,
-# define a Capistrano variable delayed_job_args:
-#
-#   set :delayed_job_args, "-n 2"
-#
-# If you've got delayed_job workers running on a servers, you can also specify
-# which servers have delayed_job running and should be restarted after deploy.
-#
-#   set :delayed_job_server_role, :worker
-#
 
 Capistrano::Configuration.instance.load do
-  namespace :delayed_job do
+  namespace :woro do
     def rails_env
       fetch(:rails_env, false) ? "RAILS_ENV=#{fetch(:rails_env)}" : ''
     end
 
-    def args
-      fetch(:delayed_job_args, '')
-    end
-
-    def roles
-      fetch(:delayed_job_server_role, :app)
-    end
-
-    def delayed_job_command
-      fetch(:delayed_job_command, 'script/delayed_job')
-    end
-
-    desc 'Stop the delayed_job process'
-    task :stop, :roles => lambda { roles } do
-      run "cd #{current_path} && #{rails_env} #{delayed_job_command} stop #{args}"
-    end
-
-    desc 'Start the delayed_job process'
-    task :start, :roles => lambda { roles } do
-      run "cd #{current_path} && #{rails_env} #{delayed_job_command} start #{args}"
-    end
-
-    desc 'Restart the delayed_job process'
-    task :restart, :roles => lambda { roles } do
-      run "cd #{current_path} && #{rails_env} #{delayed_job_command} restart #{args}"
+    desc 'Run Woro task remotely'
+    task run: :environment do
+      config = Woro::Configuration.load
+      adapter_name, task_name,  = ENV['task'].split(':')
+      adapter = config.adapter(adapter_name)
+      task = Woro::Task.new(task_name)
+      puts "Execute #{task.task_name} remotely"
+      run "cd #{current_path}/lib/tasks && curl -O #{adapter.raw_url(task.file_name)}"
+      run "cd #{current_path} && #{rails_env} rake woro:#{task.task_name}"
+      run "cd #{current_path} && rm lib/tasks/#{task.file_name}"
     end
   end
 end

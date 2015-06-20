@@ -32,23 +32,21 @@ command :init do |c|
 
     if agree 'Login to Gist/Github for private Woro tasks (Yes/No)?  '
       Gist.login!
-    #else
-      #gen_access_token = agree "Secure gists via random access token?"
-    end
+    elsif agree 'Login to AWS/S3 for private Woro tasks (Yes/No)?  '
 
+    end
+    # if none of these, use gist, but public
 
     # create Gist with welcome file
     # additional tasks will be added to this first gist
     app_name = ask 'Application name: '
-    result = Woro::Gister.create_initial_gist(app_name)
+    result = Woro::TaskHelper.create_initial_remote_task(app_name)
 
     # configure adapters
     gist_adapter = {
       gist_id: result['id'],
       public: false
     }
-    # TODO generate access token
-    #gist_adapter[:access_token] = 'access_token' if gen_access_token
     adapters = { gist: gist_adapter }
 
     unless File.exists? File.dirname(Woro::Configuration.config_file)
@@ -76,10 +74,10 @@ command :new do |c|
   c.example 'Creates tasks called "cleanup", "fix1" and "fix2"', 'woro new cleanup fix1 fix2'
   c.option '--[no-]force', 'force overwrite of existing task file'
   c.action do |args, options|
-    args.each do |arg|
-      config = Woro::Configuration.load
-      task = Woro::Task.new(config.adapters[:gist][:gist_id], arg)
-      force_overwrite = options.force
+    config = Woro::Configuration.load
+    force_overwrite = options.force
+    args.each do |task_name|
+      task = Woro::Task.new(task_name)
       if !task.exists? || force_overwrite || agree("Overwrite existing #{task.file_path}?")
         task.create_from_task_template
         say "Created #{task.file_path}"
@@ -94,12 +92,14 @@ command :push do |c|
   c.description = 'Pushes one or more local tasks to the remote collection. Existing tasks by this name in the remote connection will be updated.'
   c.example 'Pushes the task "cleanup" to the remote collection', 'woro push cleanup'
   c.action do |args, options|
+    config = Woro::Configuration.load
     args.each do |arg|
-      config = Woro::Configuration.load
+      adapter_name, task_name = arg.split(':')
+      adapter = config.adapter adapter_name
       # Pushes a new woro task by given name to gist, this can be done multiple time.
-      task = Woro::Task.new(config.adapters[:gist][:gist_id], arg)
+      task = Woro::Task.new(task_name)
       if task.exists?
-        result = task.push
+        result = adapter.push(task)
         say "Uploaded #{task.file_path} to #{result['url']}"
       else
         say "Task #{task.task_name} not found at #{task.file_path}"
@@ -112,15 +112,16 @@ command :pull do |c|
   c.syntax      = 'woro pull <task> [options]'
   c.summary     = 'Pull Woro task from remote repository'
   c.description = 'Pulls one task from the remote collection. Existing local tasks can be overwritten.'
-  c.example 'Pulls the task "cleanup" from the remote collection', 'woro pull cleanup'
+  c.example 'Pulls the task "cleanup" from the remote collection', 'woro pull gist:cleanup'
   c.option '--[no-]force', 'force overwrite of existing task file'
   c.action do |args, options|
     config = Woro::Configuration.load
-    # Pulls the  woro task by given name to gist, this can be done multiple time.
-    task = Woro::Task.new(config.adapters[:gist][:gist_id], args.first)
+    adapter_name, task_name,  = ENV['task'].split(':')
+    adapter = config.adapter adapter_name
+    task = Woro::Task.new(task_name)
     force_save = options.force
     if !task.exists? || force_overwrite || agree("Overwrite existing #{task.file_path}?")
-      system "cd '#{config.woro_task_dir}' && curl -O -# #{task.raw_url}"
+      system "cd '#{config.woro_task_dir}' && curl -O -# #{adapter.raw_url(task.file_name)}"
       say "Downloaded #{task.task_name} to #{task.file_path}"
     end
   end
@@ -135,12 +136,20 @@ command :list do |c|
   c.action do |args, options|
     abort "invalid command. See 'woro help' for more information" unless args.empty?
     config = Woro::Configuration.load
-    files = Woro::Gister.get_list_of_files config.adapters[:gist][:gist_id]
-    tasks = files.map { |file_name, data| OpenStruct.new(name_with_args: file_name.split('.rake').first, comment: Woro::Gister.extract_description(data)) if file_name.include? '.rake' }
-    tasks.compact!
-    width ||= tasks.map { |t| t.name_with_args.length }.max || 10
-    tasks.each do |t|
-      puts "  %-#{width}s   # %s" % [ t.name_with_args, t.comment ]
+    config.adapters.each do |adapter|
+      puts "  #{adapter.name} ---"
+      files = adapter.list_keys
+      tasks = files.map do |file_name, data|
+         if file_name.include? '.rake'
+          OpenStruct.new(name_with_args: file_name.split('.rake').first,
+                         comment: adapter.extract_description(data))
+        end
+      end
+      tasks.compact!
+      width ||= tasks.map { |t| t.name_with_args.length }.max || 10
+      tasks.each do |t|
+        puts "  %-#{width}s   # %s" % [ t.name_with_args, t.comment ]
+      end
     end
   end
 end

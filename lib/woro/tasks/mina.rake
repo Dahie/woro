@@ -6,10 +6,12 @@ namespace :woro do
   desc 'Run Woro task remotely'
   task run: :environment do
     config = Woro::Configuration.load
-    task = Woro::Task.new(config.adapter[:gist][:gist_id], ENV['task'])
+    adapter_name, task_name = ENV['task'].split(':')
+    adapter = config.adapter(adapter_name)
+    task = Woro::Task.new(task_name)
     print_status "Execute #{task.task_name} remotely"
     in_directory "#{app_path}" do
-      queue! "cd 'lib/tasks' && curl -O #{task.raw_url}"
+      queue! "cd 'lib/tasks' && curl -O #{adapter.raw_url(task.file_name)}"
       queue! "#{bundle_prefix} rake woro:#{task.task_name}"
       queue! "rm lib/tasks/#{task.file_name}"
     end
