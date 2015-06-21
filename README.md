@@ -86,12 +86,6 @@ First you have to push them online, in this case to Gist.
 $ woro push gist:cleanup_users
 ```
 
-You can also push to AWS S3:
-
-```shell
-$ woro push s3:cleanup_users
-```
-
 _Attention, depending on whether you set up a Gist/Github login on
 initialization. These tasks are online anonymous, but public, or
 private under the specified Github account._
