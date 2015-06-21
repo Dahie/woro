@@ -61,15 +61,15 @@ module Woro
 
       # Creates an initial welcome gist on project setup
       # @param app_name [String] Name of the app is displayed in the initial welcome message
-      def create_initial_remote_task(app_name, access_token=nil)
-        Gist.gist("Welcome to the Woro Task Repository for #{app_name}", filename: app_name, access_token: access_token)
+      def self.create_initial_remote_task(app_name, access_token=nil)
+        ::Gist.gist("Welcome to the Woro Task Repository for #{app_name}", filename: app_name, access_token: access_token)
       end
 
       # Extract description from gist's data content string.
       # @param data [Hash] gist data hash
       # [String] description string
       def extract_description(data)
-        data['content'].match(/desc ['"]([a-zA-Z0-9\s]*)['"]/)[1]
+        Woro::TaskHelper.extract_description(data['content'])
       end
 
       # Read the rake task template

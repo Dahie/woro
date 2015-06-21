@@ -32,7 +32,7 @@ command :init do |c|
 
     if agree 'Login to Gist/Github for private Woro tasks (Yes/No)?  '
       Gist.login!
-    elsif agree 'Login to AWS/S3 for private Woro tasks (Yes/No)?  '
+    #elsif agree 'Login to AWS/S3 for private Woro tasks (Yes/No)?  '
 
     end
     # if none of these, use gist, but public
@@ -40,23 +40,24 @@ command :init do |c|
     # create Gist with welcome file
     # additional tasks will be added to this first gist
     app_name = ask 'Application name: '
-    result = Woro::TaskHelper.create_initial_remote_task(app_name)
+    result = Woro::Adapters::Gist.create_initial_remote_task(app_name)
 
     # configure adapters
     gist_adapter = {
       gist_id: result['id'],
       public: false
     }
-    adapters = { gist: gist_adapter }
 
     unless File.exists? File.dirname(Woro::Configuration.config_file)
       FileUtils.mkdir_p File.dirname(Woro::Configuration.config_file)
     end
-    config = Woro::Configuration.save(adapters: adapters)
     say 'Initialized at `./config/woro.yml`'
 
+    options.default(adapters: { gist: gist_adapter } )
+    config = Woro::Configuration.save(options.__hash__)
+
     unless File.exists? config.woro_task_dir
-      FileUtils.mkdir_p
+      FileUtils.mkdir_p config.woro_task_dir
       say "Create #{config.woro_task_dir}"
     end
 
@@ -94,6 +95,10 @@ command :push do |c|
   c.action do |args, options|
     config = Woro::Configuration.load
     args.each do |arg|
+      unless arg.include?(':')
+        say_error "Does not specify upload target"
+        next
+      end
       adapter_name, task_name = arg.split(':')
       adapter = config.adapter adapter_name
       # Pushes a new woro task by given name to gist, this can be done multiple time.
@@ -116,13 +121,19 @@ command :pull do |c|
   c.option '--[no-]force', 'force overwrite of existing task file'
   c.action do |args, options|
     config = Woro::Configuration.load
-    adapter_name, task_name,  = ENV['task'].split(':')
-    adapter = config.adapter adapter_name
-    task = Woro::Task.new(task_name)
-    force_save = options.force
-    if !task.exists? || force_overwrite || agree("Overwrite existing #{task.file_path}?")
-      system "cd '#{config.woro_task_dir}' && curl -O -# #{adapter.raw_url(task.file_name)}"
-      say "Downloaded #{task.task_name} to #{task.file_path}"
+    args.each do |arg|
+      unless arg.include?(':')
+        say_error "Does not specify download target"
+        next
+      end
+      adapter_name, task_name = arg.split(':')
+      adapter = config.adapter adapter_name
+      task = Woro::Task.new(task_name)
+      force_overwrite = options.force
+      if !task.exists? || force_overwrite || agree("Overwrite existing #{task.file_path}?")
+        system "cd '#{config.woro_task_dir}' && curl -O -# #{adapter.raw_url(task.file_name)}"
+        say "Downloaded #{task.task_name} to #{task.file_path}"
+      end
     end
   end
 end
@@ -136,21 +147,25 @@ command :list do |c|
   c.action do |args, options|
     abort "invalid command. See 'woro help' for more information" unless args.empty?
     config = Woro::Configuration.load
-    config.adapters.each do |adapter|
-      puts "  #{adapter.name} ---"
-      files = adapter.list_keys
+    config.adapters.each do |adapter_config|
+      puts "#{adapter_config[0]} ---"
+      adapter = config.adapter(adapter_config[0])
+      files = adapter.list_keys || {}
       tasks = files.map do |file_name, data|
-         if file_name.include? '.rake'
+        if file_name.include? '.rake'
           OpenStruct.new(name_with_args: file_name.split('.rake').first,
                          comment: adapter.extract_description(data))
         end
       end
       tasks.compact!
-      width ||= tasks.map { |t| t.name_with_args.length }.max || 10
-      tasks.each do |t|
-        puts "  %-#{width}s   # %s" % [ t.name_with_args, t.comment ]
-      end
+      Woro::TaskHelper.print_task_list(tasks)
     end
+    puts "local ---"
+    tasks = Woro::TaskHelper.woro_task_files(config.woro_task_dir) do |file_name, data|
+      OpenStruct.new(name_with_args: file_name.split('.rake').first,
+                     comment: Woro::TaskHelper.extract_description(data))
+    end
+    Woro::TaskHelper.print_task_list(tasks)
   end
 end
 alias_command :ls, :list
