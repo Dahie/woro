@@ -9,7 +9,7 @@ module Woro
     # Initialize configuration.
     def initialize(options = {})
       @woro_task_dir = Configuration.woro_task_dir
-      @adapters = options[:adapters]
+      @adapters = options[:adapters] || {}
       @app_name = options[:app_name]
     end
 
@@ -32,7 +32,9 @@ module Woro
       force_save = options.delete :force
 
       if !(File.exists? config_file) || force_save
-        File.open(config_file, 'w') { |file| YAML.dump(default_options.merge(user_options), file) }
+        File.open(config_file, 'w') do |file|
+          YAML.dump(default_options.merge(user_options), file)
+        end
         say "Initialized config file in #{config_file}"
       else
         say_error "Not overwriting existing config file #{config_file}, use --force to override. See 'woro help init'."

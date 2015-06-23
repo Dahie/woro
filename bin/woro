@@ -24,6 +24,31 @@ executed by rake and cleaned up afterwards.'
 
 default_command :list
 
+def create_directory_unless_existing(directory)
+  unless File.exists? directory
+    FileUtils.mkdir_p directory
+    say "Created #{directory}"
+  end
+end
+
+def create_required_files
+  create_directory_unless_existing Woro::Configuration.woro_task_dir
+  create_directory_unless_existing Woro::Configuration.rake_task_dir
+
+  unless File.exists? File.join(Woro::Configuration.rake_task_dir, 'woro.rake')
+    FileUtils.cp(File.dirname(__FILE__) + '/../lib/woro/templates/woro.rake',
+                 Woro::Configuration.rake_task_dir)
+    say "Created woro.rake in #{Woro::Configuration.rake_task_dir}"
+  end
+end
+
+def woro_environment_setup?
+  File.exists?(Woro::Configuration.woro_task_dir) &&
+    File.exists?(File.join('config', 'woro.yml')) &&
+    File.exists?(Woro::Configuration.rake_task_dir) &&
+    File.exists?(File.join(Woro::Configuration.rake_task_dir, 'woro.rake'))
+end
+
 command :init do |c|
   c.syntax      = 'woro init [options]'
   c.description = 'Initialize Woro in the current Rails directory and setup Gist collection'
@@ -55,26 +80,20 @@ command :init do |c|
 
     options.default(adapters: { gist: gist_adapter } )
     config = Woro::Configuration.save(options.__hash__)
-
-    unless File.exists? config.woro_task_dir
-      FileUtils.mkdir_p config.woro_task_dir
-      say "Create #{config.woro_task_dir}"
-    end
-
-    say "Create woro.rake in #{config.rake_task_dir}"
-    FileUtils.mkdir_p config.rake_task_dir if !File.exists? config.rake_task_dir
-    FileUtils.cp(File.dirname(__FILE__) + '/../lib/woro/templates/woro.rake', config.rake_task_dir)
+    create_required_files
   end
 end
 
 command :new do |c|
-  c.syntax      = 'woro create <task> [options]'
+  c.syntax      = 'woro new <task> [options]'
   c.summary     = 'Create new tasks'
   c.description = 'Creates one or more new templated Rake tasks'
   c.example 'Create task called "cleanup"', 'woro new cleanup'
   c.example 'Creates tasks called "cleanup", "fix1" and "fix2"', 'woro new cleanup fix1 fix2'
   c.option '--[no-]force', 'force overwrite of existing task file'
   c.action do |args, options|
+    abort 'Woro environment is not set up. Call `woro init` to do so.' unless woro_environment_setup?
+
     config = Woro::Configuration.load
     force_overwrite = options.force
     args.each do |task_name|
@@ -93,6 +112,8 @@ command :push do |c|
   c.description = 'Pushes one or more local tasks to the remote collection. Existing tasks by this name in the remote connection will be updated.'
   c.example 'Pushes the task "cleanup" to the remote collection', 'woro push cleanup'
   c.action do |args, options|
+    abort 'Woro environment is not set up. Call `woro init` to do so.' unless woro_environment_setup?
+
     config = Woro::Configuration.load
     args.each do |arg|
       unless arg.include?(':')
@@ -120,6 +141,8 @@ command :pull do |c|
   c.example 'Pulls the task "cleanup" from the remote collection', 'woro pull gist:cleanup'
   c.option '--[no-]force', 'force overwrite of existing task file'
   c.action do |args, options|
+    abort 'Woro environment is not set up. Call `woro init` to do so.' unless woro_environment_setup?
+
     config = Woro::Configuration.load
     args.each do |arg|
       unless arg.include?(':')
@@ -145,6 +168,7 @@ command :list do |c|
   c.example 'List all tasks', 'woro list --all'
   c.option '-a', '--all', 'List all tasks'
   c.action do |args, options|
+    abort 'Woro environment is not set up. Call `woro init` to do so.' unless woro_environment_setup?
     abort "invalid command. See 'woro help' for more information" unless args.empty?
     config = Woro::Configuration.load
     config.adapters.each do |adapter_config|

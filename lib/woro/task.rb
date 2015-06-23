@@ -48,14 +48,6 @@ module Woro
       end
     end
 
-    # Requests the content of the task file within the Gist collection
-    # from the server.
-    # @return [String]
-    def retrieve_raw_file
-      response = Net::HTTP.get_response(raw_url)
-      response.body
-    end
-
     # Read the content of the local rake task file on #file_path.
     def read_task_file
       File.read(file_path)
