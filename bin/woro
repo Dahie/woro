@@ -55,6 +55,9 @@ command :init do |c|
   c.option '--[no-]force', 'force overwrite of existing config file'
   c.action do |args, options|
 
+
+    # TODO do choice http://stackoverflow.com/questions/24966581/highline-ruby-gem-how-to-provide-a-variable-number-of-menu-choices-at-runtime
+
     if agree 'Login to Gist/Github for private Woro tasks (Yes/No)?  '
       Gist.login!
     #elsif agree 'Login to AWS/S3 for private Woro tasks (Yes/No)?  '
@@ -178,7 +181,7 @@ command :list do |c|
     config.adapters.each do |adapter_config|
       puts "#{adapter_config[0]} ---"
       adapter = config.adapter(adapter_config[0])
-      files = adapter.list_keys || {}
+      files = adapter.list_contents || {}
       tasks = files.map do |file_name, data|
         if file_name.include? '.rake'
           OpenStruct.new(name_with_args: file_name.split('.rake').first,

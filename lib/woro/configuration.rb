@@ -46,8 +46,10 @@ module Woro
       options = adapters[name.to_sym]
 
       case name.to_sym
+      when :ftp
+        @ftp_adapter ||= Woro::Adapters::Ftp.new(options)
       when :gist
-        @gist_adapter ||= Woro::Adapters::Gist.new(options[:gist_id])
+        @gist_adapter ||= Woro::Adapters::Gist.new(options)
       end
     end
 
