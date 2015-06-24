@@ -1,6 +1,5 @@
 require 'woro/version'
 require 'woro/task_helper'
 require 'woro/task'
-require 'woro/adapters/s3'
 require 'woro/adapters/gist'
 require 'woro/configuration'
