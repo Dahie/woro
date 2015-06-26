@@ -64,7 +64,11 @@ command :init do |c|
 
     # create Gist with welcome file
     # additional tasks will be added to this first gist
-    app_name = ask 'Application name: '
+    begin
+      app_name = Rails.application.class.parent_name
+    rescue
+      app_name = ask('Application name: ')
+    end
     result = Woro::Adapters::Gist.create_initial_remote_task(app_name)
 
     # configure adapters

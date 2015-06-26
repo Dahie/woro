@@ -38,7 +38,11 @@ Then run:
 $ woro init
 ```
 
-This will create `lib/woro_tasks/` folder and `lib/tasks/woro.rake`.
+This creates the `woro.yml` in the `config/` folder. This configuration
+stores the settings of the available remote collection adapters, eg the
+Gist id.
+
+It also creates the `lib/woro_tasks/` folder and `lib/tasks/woro.rake`.
 Here the Woro task files are stored, edited locally and run using rake.
 
 ### for use with Mina
@@ -113,6 +117,21 @@ And finally you can download an existing task to your local woro tasks directory
 
 ```shell
 $ woro pull gist:cleanup_users
+```
+
+## Testing
+
+The project classes are tested through rspec.
+
+```shell
+$ rspec
+```
+
+The command line interface
+is tested through cucmber/aruba.
+
+```shell
+$ cucumber
 ```
 
 ## Contributing

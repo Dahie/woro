@@ -17,6 +17,4 @@ Given /^the Woro environment is set up$/ do
              File.read(File.dirname(__FILE__) + '/../../lib/woro/templates/woro.rake') )
   write_file(File.join('config', 'woro.yml'),
              { adapters: {} }.to_yaml)
-
-
 end
