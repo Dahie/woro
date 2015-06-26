@@ -18,7 +18,7 @@ describe Woro::Configuration do
     context 'not given a configuration file' do
       it 'returns Configuration object with default options' do
         config = Woro::Configuration.load
-        expect(config.adapters).to be_falsy
+        expect(config.adapters).to eq({})
         expect(config.app_name).to be_falsy
       end
 

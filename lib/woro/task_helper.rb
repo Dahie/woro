@@ -32,7 +32,7 @@ module Woro
       # Read the rake task template
       # @return [String]
       def read_template_file
-        File.read(File.join(File.dirname(__FILE__), 'templates','task.rake') )
+        File.read(File.join(File.dirname(__FILE__), 'templates','task.rake.erb') )
       end
     end
   end

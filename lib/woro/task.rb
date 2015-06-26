@@ -39,12 +39,15 @@ module Woro
       File.exist? file_path
     end
 
-    # Creates a new rake task file at the file path (see #file_path).
-    def create_from_task_template
+    def build_task_template
       b = binding
       template = ERB.new(Woro::TaskHelper.read_template_file).result(b)
+    end
+
+    # Creates a new rake task file at the file path (see #file_path).
+    def create_from_task_template
       File.open(file_path, 'w') do |f|
-        f.puts template
+        f.puts build_task_template
       end
     end
 

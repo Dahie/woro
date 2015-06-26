@@ -1,17 +1,17 @@
 require 'spec_helper'
 
 describe Woro::Task do
-
   subject { Woro::Task.new('cleanup_task') }
 
   describe '#create_from_task_template' do
     it 'creates new file' do
       FakeFS.deactivate!
-      example_path = File.join('spec', 'fixtures','fresh_template.yml')
+      example_path = File.join('spec', 'fixtures','cleanup.rake')
       fresh_template_body = File.read example_path
+      allow(Woro::TaskHelper).to receive(:read_template_file).and_return fresh_template_body
       FakeFS.activate!
       subject.create_from_task_template
-      expect(File.read(Woro::Task.file_path)).to eq fresh_template_body
+      expect(File.read(subject.file_path)).to eq fresh_template_body
     end
   end
 
