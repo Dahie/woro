@@ -1,7 +1,6 @@
 require 'pry'
 require 'woro'
 require 'fakefs/safe'
-require 'aws-sdk-v1'
 
 Dir[('./spec/support/**/*.rb')].each {|f| require f}
 
