@@ -16,7 +16,6 @@ Feature: Manage Woro task
 
     """
 
-
   Scenario: List tasks without environment setup
     Given I run `woro list`
     Then the output should contain "Woro environment is not set up. Call `woro init` to do so."

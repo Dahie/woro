@@ -4,6 +4,18 @@ module Woro
     class Ftp < Base
       attr_accessor :host, :user, :password, :folder
 
+      # Setup configuration for adapter
+      # Highline CLI helpers can be used for interactivity.
+      # @return [Hash] Configuration options
+      def self.setup
+        {
+          host:     ask('FTP Host: '),
+          user:     ask('FTP User: '),
+          password: ask('FTP Passwod: '),
+          folder:   ask('FTP Folder: ')
+        }
+      end
+
       def initialize(options)
         self.host = options['host']
         self.user = options['user']
@@ -11,31 +23,27 @@ module Woro
         self.folder = options['folder'] || '/'
       end
 
-      # Returns the list of rake files included in the remote collection
+      # Returns the list of rake files included in the remote collection.
       # @return [Array] List of files
       def list_files
         [].tap do |files|
-          client do |ftp|
-            ftp.chdir(folder)
-            ftp.nlst.each do |file|
-              files << file if file.include?('.rake')
-            end
+          remote_files do |file|
+            files << file
           end
         end
       end
 
+      # Returns the list of rake files included in the remote collection
+      # with their contents.
+      # @return [Hash] List of files with their contents
       def list_contents
         {}.tap do |files|
-          client do |ftp|
-            ftp.chdir(folder)
-            ftp.nlst.each do |file|
-              next unless file.include?('.rake')
-              ftp.gettextfile(file) do |line, newline|
-                content.concat newline ? line + "\n" : line
-              end # temporarly downloads the file
-              FileUtils.rm file
-              files[file] = { data: content }
-            end
+          remote_files do |file|
+            ftp.gettextfile(file) do |line, newline|
+              content.concat newline ? line + "\n" : line
+            end # temporarly downloads the file
+            FileUtils.rm file
+            files[file] = { data: content }
           end
         end
       end
@@ -57,6 +65,15 @@ module Woro
       end
 
       protected
+
+      def remote_files
+        client do |ftp|
+          ftp.chdir(folder)
+          ftp.nlst.each do |file|
+            yield file if file.include?('.rake')
+          end
+        end
+      end
 
       def client
         Net::FTP.open(host, user, password) do |ftp|

@@ -1,6 +1,8 @@
+require 'commander'
 module Woro
   module Adapters
     class Base
+      include ::Commander::UI
 
       # Extract description from file content string.
       # @param content [String] content of task file
@@ -12,17 +14,20 @@ module Woro
       # Returns the list of files included in the Gist
       # @return [Array] List of file names
       def list_files
+        fail('Requires implementation')
       end
 
       # Returns the list of files included in the Gist
       # @return [Hash] List of files in the format { filename: { data }}
       def list_contents
+        fail('Requires implementation')
       end
 
       # Push this task's file content to the Gist collection on the server.
       # Existing contents by the same #file_name will be overriden, but
       # can be accessed via Github or Gist's API.
       def push(task)
+        fail('Requires implementation')
       end
 
       # Creates an initial welcome gist on project setup
@@ -37,8 +42,8 @@ module Woro
       # @param file_name [String] name of the file to retrieve the download url
       # @return [String] HTTP-URL of addressed file within the gist collection
       def raw_url(file_name)
+        fail('Requires implementation')
       end
-
     end
   end
 end
