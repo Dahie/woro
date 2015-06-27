@@ -67,7 +67,7 @@ command :init do |c|
     begin
       require File.join(Dir.pwd, 'config', 'application.rb')
       app_name = Rails.application.class.parent_name
-    rescue
+    rescue LoadError
       app_name = ask('Application name: ')
     end
     result = Woro::Adapters::Gist.create_initial_remote_task(app_name)

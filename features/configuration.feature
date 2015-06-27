@@ -10,7 +10,7 @@ Feature: Configure woro
     When I run `woro init` interactively
     And I type "n\n"
     And I type "Rails-project\n"
-    Then the output should contain "Initialized at `./config/woro.yml`"
+    Then the output should contain "Initialized config file in `config/woro.yml`"
     And the following files should exist:
       | config/woro.yml   |
 

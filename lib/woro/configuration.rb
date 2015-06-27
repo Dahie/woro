@@ -19,7 +19,7 @@ module Woro
 
       if !(File.exists? config_file)
         File.open(config_file, 'w') { |file| YAML.dump(default_options, file) }
-        say "Initialized default config file in #{config_file}. See 'woro help init' for options."
+        say "Initialized default config file in `#{config_file}`. See 'woro help init' for options."
       end
 
       config_file_options = YAML.load_file(config_file)
@@ -35,9 +35,9 @@ module Woro
         File.open(config_file, 'w') do |file|
           YAML.dump(default_options.merge(user_options), file)
         end
-        say "Initialized config file in #{config_file}"
+        say "Initialized config file in `#{config_file}`"
       else
-        say_error "Not overwriting existing config file #{config_file}, use --force to override. See 'woro help init'."
+        say_error "Not overwriting existing config file `#{config_file}`, use --force to override. See 'woro help init'."
       end
       self
     end
