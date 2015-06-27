@@ -6,7 +6,7 @@ describe Woro::Task do
   describe '#create_from_task_template' do
     it 'creates new file' do
       FakeFS.deactivate!
-      example_path = File.join('spec', 'fixtures','cleanup.rake')
+      example_path = File.join('spec', 'fixtures', 'cleanup.rake')
       fresh_template_body = File.read example_path
       allow(Woro::TaskHelper).to receive(:read_template_file).and_return fresh_template_body
       FakeFS.activate!

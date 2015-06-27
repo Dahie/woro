@@ -4,7 +4,9 @@ Feature: Configure woro
   I want a sane default configuration for my system
   and a data file to store my tasks
 
-  Scenario: Initialize configuration
+  # TODO Scenario: Initialize configuration with Rails environment
+
+  Scenario: Initialize configuration without Rails environment
     When I run `woro init` interactively
     And I type "n\n"
     And I type "Rails-project\n"

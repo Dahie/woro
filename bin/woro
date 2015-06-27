@@ -65,6 +65,7 @@ command :init do |c|
     # create Gist with welcome file
     # additional tasks will be added to this first gist
     begin
+      require File.join(Dir.pwd, 'config', 'application.rb')
       app_name = Rails.application.class.parent_name
     rescue
       app_name = ask('Application name: ')
@@ -80,7 +81,6 @@ command :init do |c|
     unless File.exists? File.dirname(Woro::Configuration.config_file)
       FileUtils.mkdir_p File.dirname(Woro::Configuration.config_file)
     end
-    say 'Initialized at `./config/woro.yml`'
 
     options.default(adapters: { gist: gist_adapter } )
     config = Woro::Configuration.save(options.__hash__)
