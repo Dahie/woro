@@ -9,10 +9,10 @@ module Woro
       # @return [Hash] Configuration options
       def self.setup
         {
-          host:     ask('FTP Host: '),
-          user:     ask('FTP User: '),
-          password: ask('FTP Passwod: '),
-          folder:   ask('FTP Folder: ')
+          'host' =>     ask('FTP Host: '),
+          'user' =>     ask('FTP User: '),
+          'password' => ask('FTP Passwod: '),
+          'folder' =>   ask('FTP Folder: ') { |q| q.default = '/' }
         }
       end
 
@@ -48,7 +48,7 @@ module Woro
         end
       end
 
-      # Push this task's file content ftp server.
+      # Push this task's file content to ftp server.
       # Existing contents by the same #file_name will be overriden.
       def push(task)
         client do |ftp|
@@ -79,6 +79,8 @@ module Woro
         Net::FTP.open(host, user, password) do |ftp|
           yield(ftp)
         end
+      rescue => e
+        say_error "Error connecting to ftp://#{host}: #{e.message}"
       end
     end
   end

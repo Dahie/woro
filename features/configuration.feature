@@ -18,10 +18,10 @@ Feature: Configure woro
     """
     1. Ftp
     Please choose a service to use with Woro:
-    FTP Host: FTP User: FTP Passwod: FTP Folder: Do you want to configure another service?
-    Created lib/woro_tasks
-    Created lib/tasks
-    Created config
+    FTP Host: FTP User: FTP Passwod: FTP Folder: |/| Do you want to configure another service?
+    Created `lib/woro_tasks`
+    Created `lib/tasks`
+    Created `config`
     Created `woro.rake` in `lib/tasks`
     Initialized config file in `config/woro.yml`
 
