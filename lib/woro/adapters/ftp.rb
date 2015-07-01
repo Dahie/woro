@@ -16,7 +16,7 @@ module Woro
         }
       end
 
-      def initialize(options)
+      def initialize(options = [])
         self.host = options['host']
         self.user = options['user']
         self.password = options['password']

@@ -119,14 +119,14 @@ command :push do |c|
         next
       end
       adapter_name, task_name = arg.split(':')
-      adapter = config.adapter adapter_name
       # Pushes a new woro task by given name to storage, this can be done multiple time.
       task = Woro::Task.new(task_name)
       if task.exists?
+        adapter = config.adapter adapter_name
         result = adapter.push(task)
         say "Uploaded `#{task.file_path} to #{result['url']}"
       else
-        say "Task `#{task.task_name}` not found at #{task.file_path}"
+        say "Task `#{task.task_name}` not found at `#{task.file_path}`"
       end
     end
   end
@@ -169,14 +169,14 @@ command :list do |c|
     abort 'Woro environment is not set up. Call `woro init` to do so.' unless woro_environment_setup?
     abort "invalid command. See 'woro help' for more information" unless args.empty?
     config = Woro::Configuration.load
-    config.adapters.each do |adapter_config|
-      puts "#{adapter_config[0]} ---"
-      adapter = config.adapter(adapter_config[0])
+    config.adapter_settings.each do |adapter_setting|
+      say "#{adapter_setting[0]} ---"
+      adapter = config.adapter(adapter_setting[0])
       files = adapter.list_contents || {}
       tasks = files.map do |file_name, data|
         if file_name.include? '.rake'
           OpenStruct.new(name_with_args: file_name.split('.rake').first,
-                         comment: adapter.extract_description(data))
+                         comment: adapter.extract_description(data[:data]))
         end
       end
       tasks.compact!

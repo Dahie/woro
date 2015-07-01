@@ -52,11 +52,17 @@ Feature: Manage Woro task
     When I run `woro push cleanup`
     Then the output should contain "Does not specify upload service, eg `woro push ftp:cleanup`"
 
+  Scenario: Push unknown local task
+    Given the Woro environment is set up
+    When I run `woro push ftp:cleanup_all --trace`
+    Then the output should contain "Task `cleanup_all` not found at `lib/woro_tasks/cleanup_all.rake`"
+
   Scenario: Pull local task to remote without environment
     When I run `woro pull stub:cleanup`
     Then the output should contain "Woro environment is not set up. Call `woro init` to do so."
 
   Scenario: Pull local task to remote without adapter name
-  Given the Woro environment is set up
+    Given the Woro environment is set up
     When I run `woro pull cleanup`
     Then the output should contain "Does not specify download service, eg `woro pull ftp:cleanup`"
+

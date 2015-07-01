@@ -4,20 +4,20 @@ include Commander::UI
 
 module Woro
   class Configuration
-    attr_reader :adapters, :woro_task_dir, :app_name
+    attr_reader :adapter_settings, :woro_task_dir, :app_name
 
     # Initialize configuration.
     def initialize(options = {})
       @woro_task_dir = Configuration.woro_task_dir
-      @adapters = options[:adapters] || {}
-      @app_name = options[:app_name]
+      @adapter_settings = options['adapters'] || {}
+      @app_name = options['app_name']
     end
 
     # Load configuration file or default_options. Passed options take precedence.
     def self.load(options = {})
-      user_options = options.reject{|k,v| ![:adapters, :app_name].include? k}
+      user_options = options.reject { |k, v| !['adapters', 'app_name'].include? k }
 
-      if !(File.exists? config_file)
+      unless File.exist? config_file
         File.open(config_file, 'w') { |file| YAML.dump(default_options, file) }
         say "Initialized default config file in `#{config_file}`. See 'woro help init' for options."
       end
@@ -28,10 +28,10 @@ module Woro
 
     # Save configuration. Passed options take precendence over default_options.
     def self.save(options = {})
-      user_options = options.reject{|k,v| ![:adapters, :app_name].include? k}
+      user_options = options.reject { |k, v| !['adapters', 'app_name'].include? k }
       force_save = options.delete :force
 
-      if !(File.exists? config_file) || force_save
+      if !File.exist?(config_file) || force_save
         File.open(config_file, 'w') do |file|
           YAML.dump(default_options.merge(user_options), file)
         end
@@ -42,15 +42,9 @@ module Woro
       self
     end
 
-    def adapter(name)
-      options = adapters[name.to_sym]
-
-      case name.to_sym
-      when :ftp
-        @ftp_adapter ||= Woro::Adapters::Ftp.new(options)
-      when :gist
-        @gist_adapter ||= Woro::Adapters::Gist.new(options)
-      end
+    def adapter(adapter_name)
+      clazz = Object.const_get("Woro::Adapters::#{adapter_name.capitalize}")
+      clazz.new adapter_settings[adapter_name.downcase]
     end
 
     # Helpers
