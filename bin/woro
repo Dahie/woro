@@ -103,6 +103,7 @@ command :new do |c|
     end
   end
 end
+alias_command :create, :new
 
 command :push do |c|
   c.syntax      = 'woro push <task> [options]'
