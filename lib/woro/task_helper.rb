@@ -9,7 +9,7 @@ module Woro
       end
 
       # Perform an action over all files within the woro task directory
-      def woro_task_files(directory, &block)
+      def woro_task_files(directory)
         tasks = []
         Dir.foreach(directory) do |file_name|
           if file_name.include? '.rake'
@@ -24,7 +24,9 @@ module Woro
       # @param data [Hash] gist data hash
       # [String] description string
       def extract_description(task_content)
-        task_content.match(/desc ['"]([a-zA-Z0-9\s]*)['"]/)[1]
+        # regex from http://stackoverflow.com/questions/171480/regex-grabbing-values-between-quotation-marks
+        match = task_content.match(/desc (["'])((?:(?!\1)[^\\]|(?:\\\\)*\\[^\\])*)\1/)
+        match && match[2] || 'No description'
       end
 
       # Read the rake task template
