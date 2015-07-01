@@ -6,11 +6,17 @@ Manage one-time remote tasks in your Rails project.
 Plugins with Mina and Capistrano to add support for rake tasks hosted in remote collection, such as Gist.
 
 Say you have a data migration to perform on a remote server. The procedure is too complex to just do it in the remote console and using database migrations would be evil. A rake task would be nice, but checking this in with the source code repository adds clutter, as you know you will only run this once.
-Woro offers a quick way of pushing rake tasks onto the remote server, execute them and delete them instantly. Using Github's gist, you keep version control of the tasks and can share them with colleagues.
+Woro offers a quick way of pushing rake tasks onto the remote server, execute them and delete them instantly.
 
 Woro helps you create rake tasks, that you can develop and run locally.
-Once you are ready, woro let's you push them online to a remote collection like Gist.
+Once you are ready, woro let's you push them online to a remote storage like FTP or other adapters like Gist or S3.
 Using a mina deployment setup, these tasks are downloaded on the remote system, executed by rake and cleaned up afterwards.
+
+### Adapters
+
+By default Woro comes with support for FTP, but additional adapters are available:
+
+* [woro-gist](https://github.com/github/woro-gist)
 
 ## Installation
 
@@ -87,7 +93,7 @@ Once you are done writing the task and you want to execute it on the remote syst
 First you have to push them online, in this case to Gist.
 
 ```shell
-$ woro push gist:cleanup_users
+$ woro push ftp:cleanup_users
 ```
 
 _Attention, depending on whether you set up a Gist/Github login on
@@ -97,13 +103,13 @@ private under the specified Github account._
 Now, to run a task remotely using Mina, specify the task:
 
 ```shell
-$ mina woro:run task=gist:cleanup_users
+$ mina woro:run task=ftp:cleanup_users
 ```
 
 Or to run it with Capistrano:
 
 ```shell
-$ cap woro:run task=gist:cleanup_users
+$ cap woro:run task=ftp:cleanup_users
 ```
 
 To show a list of all tasks uploaded to any collection do:
@@ -116,7 +122,7 @@ $ woro ls
 And finally you can download an existing task to your local woro tasks directory.
 
 ```shell
-$ woro pull gist:cleanup_users
+$ woro pull ftp:cleanup_users
 ```
 
 ## Testing

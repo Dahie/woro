@@ -1,8 +1,6 @@
 module Woro
   class TaskHelper
-
     class << self
-
       def print_task_list(tasks)
         width ||= tasks.map { |t| t.name_with_args.length }.max || 10
         tasks.each do |t|

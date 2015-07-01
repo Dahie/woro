@@ -5,11 +5,11 @@ describe Woro::Configuration do
   describe '#initialize' do
     it 'instantiates object' do
       options = {
-        adapters: %(foo baz),
-        app_name: 'bar'
+        'adapters' => %(foo baz),
+        'app_name' => 'bar'
       }
       config = Woro::Configuration.new(options)
-      expect(config.adapters).to eq %(foo baz)
+      expect(config.adapter_settings).to eq %(foo baz)
       expect(config.app_name).to eq 'bar'
     end
   end
@@ -18,7 +18,7 @@ describe Woro::Configuration do
     context 'not given a configuration file' do
       it 'returns Configuration object with default options' do
         config = Woro::Configuration.load
-        expect(config.adapters).to eq({})
+        expect(config.adapter_settings).to eq({})
         expect(config.app_name).to be_falsy
       end
 
@@ -32,8 +32,8 @@ describe Woro::Configuration do
     context 'given a configuration file' do
       before(:each) do
         opts = {
-          adapters: %w(foo baz),
-          app_name: 'bar'
+          'adapters' => %w(foo baz),
+          'app_name' => 'bar'
         }
         File.open(Woro::Configuration.config_file, 'w') do |file|
           YAML.dump(opts, file)
@@ -42,18 +42,18 @@ describe Woro::Configuration do
 
       it 'returns Configuration object with options in file' do
         config = Woro::Configuration.load
-        expect(config.adapters).to eq %w(foo baz)
+        expect(config.adapter_settings).to eq %w(foo baz)
         expect(config.app_name).to eq 'bar'
       end
 
       context 'given options' do
         it 'overrides options in configuration file' do
           options = {
-            adapters:  %w(goo grr),
-            app_name: 'car'
+            'adapters' => %w(goo grr),
+            'app_name' => 'car'
           }
           config = Woro::Configuration.load(options)
-          expect(config.adapters).to eq %w(goo grr)
+          expect(config.adapter_settings).to eq %w(goo grr)
           expect(config.app_name).to eq 'car'
         end
       end
@@ -63,8 +63,8 @@ describe Woro::Configuration do
   describe '.save' do
     let(:options) do
       {
-        adapters: ['foo', 'baz'],
-        app_name: 'bar'
+        'adapters' => ['foo', 'baz'],
+        'app_name' => 'bar'
       }
     end
 
@@ -79,8 +79,8 @@ describe Woro::Configuration do
     context 'given a configuration file' do
       before(:each) do
         opts = {
-          adapters: ['goo', 'grr'],
-          app_name: 'car'
+          'adapters' => ['goo', 'grr'],
+          'app_name' => 'car'
         }
         File.open(Woro::Configuration.config_file, 'w') do |file|
           YAML.dump(opts, file)

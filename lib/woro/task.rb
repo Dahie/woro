@@ -10,7 +10,8 @@ module Woro
       @task_name = Woro::Task.sanitize_task_name task_name
     end
 
-    # @param task_name [String] sanitized name of the task, used throughout the further processing
+    # @param task_name [String] sanitized name of the task, used
+    # throughout the further processing
     # @return [Task] the created task
     def self.create(task_name)
       task = Woro::Task.new(task_name)
@@ -52,6 +53,7 @@ module Woro
     end
 
     # Read the content of the local rake task file on #file_path.
+    # @return [String] file content
     def read_task_file
       File.read(file_path)
     end

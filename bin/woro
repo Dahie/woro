@@ -14,8 +14,7 @@ to just do it in the remote console and using database migrations would be evil.
 A rake task would be nice, but checking this in with the source code repository
 adds clutter, as you know you will only run this once.
 Woro offers a quick way of pushing rake tasks onto the remote server, execute them
-and delete them instantly. Using Github\'s gist, you keep version control of the tasks
-and can share them with colleagues.
+and delete them instantly.
 
 Woro helps you create rake tasks, that you can develop and run locally.
 Once you are ready, woro let\'s you push them online to a remote collection like Gist.
@@ -27,18 +26,19 @@ default_command :list
 def create_directory_unless_existing(directory)
   unless File.exists? directory
     FileUtils.mkdir_p directory
-    say "Created #{directory}"
+    say "Created `#{directory}`"
   end
 end
 
 def create_required_files
   create_directory_unless_existing Woro::Configuration.woro_task_dir
   create_directory_unless_existing Woro::Configuration.rake_task_dir
+  create_directory_unless_existing File.dirname(Woro::Configuration.config_file)
 
   unless File.exists? File.join(Woro::Configuration.rake_task_dir, 'woro.rake')
     FileUtils.cp(File.dirname(__FILE__) + '/../lib/woro/templates/woro.rake',
                  Woro::Configuration.rake_task_dir)
-    say "Created woro.rake in #{Woro::Configuration.rake_task_dir}"
+    say "Created `woro.rake` in `#{Woro::Configuration.rake_task_dir}`"
   end
 end
 
@@ -49,42 +49,36 @@ def woro_environment_setup?
     File.exists?(File.join(Woro::Configuration.rake_task_dir, 'woro.rake'))
 end
 
+def select_choice(choices)
+  choose do |menu|
+    menu.prompt = 'Please choose a service to use with Woro:'
+    menu.choices(*choices) do |choice|
+      return choice.to_s.strip
+    end
+  end
+end
+
+def choose_and_build_adapter_config(available_adapters)
+  adapter_name = select_choice available_adapters
+  adapter = Object.const_get "Woro::Adapters::#{adapter_name}"
+  { adapter_name => adapter.setup }
+end
+
 command :init do |c|
   c.syntax      = 'woro init [options]'
   c.description = 'Initialize Woro in the current Rails directory and setup Gist collection'
   c.option '--[no-]force', 'force overwrite of existing config file'
   c.action do |args, options|
-
-    if agree 'Login to Gist/Github for private Woro tasks (Yes/No)?  '
-      Gist.login!
-    #elsif agree 'Login to AWS/S3 for private Woro tasks (Yes/No)?  '
-
-    end
-    # if none of these, use gist, but public
-
-    # create Gist with welcome file
-    # additional tasks will be added to this first gist
+    available_adapters = Woro::Adapters.constants.reject { |name| name == :Base }
+    adapters = {}
     begin
-      require File.join(Dir.pwd, 'config', 'application.rb')
-      app_name = Rails.application.class.parent_name
-    rescue LoadError
-      app_name = ask('Application name: ')
-    end
-    result = Woro::Adapters::Gist.create_initial_remote_task(app_name)
+      adapters.merge! choose_and_build_adapter_config(available_adapters)
+    end while agree('Do you want to configure another service?')
+    options.default(adapters: adapters )
 
-    # configure adapters
-    gist_adapter = {
-      gist_id: result['id'],
-      public: false
-    }
-
-    unless File.exists? File.dirname(Woro::Configuration.config_file)
-      FileUtils.mkdir_p File.dirname(Woro::Configuration.config_file)
-    end
-
-    options.default(adapters: { gist: gist_adapter } )
-    config = Woro::Configuration.save(options.__hash__)
     create_required_files
+
+    config = Woro::Configuration.save(options.__hash__)
   end
 end
 
@@ -114,25 +108,25 @@ command :push do |c|
   c.syntax      = 'woro push <task> [options]'
   c.summary     = 'Push tasks to remote collection, updates existing tasks'
   c.description = 'Pushes one or more local tasks to the remote collection. Existing tasks by this name in the remote connection will be updated.'
-  c.example 'Pushes the task "cleanup" to the remote collection', 'woro push cleanup'
+  c.example 'Pushes the task "cleanup" to the remote collection', 'woro push ftp:cleanup'
   c.action do |args, options|
     abort 'Woro environment is not set up. Call `woro init` to do so.' unless woro_environment_setup?
 
     config = Woro::Configuration.load
     args.each do |arg|
       unless arg.include?(':')
-        say_error "Does not specify upload target"
+        say_error "Does not specify upload service, eg `woro push ftp:#{arg}`"
         next
       end
       adapter_name, task_name = arg.split(':')
-      adapter = config.adapter adapter_name
-      # Pushes a new woro task by given name to gist, this can be done multiple time.
+      # Pushes a new woro task by given name to storage, this can be done multiple time.
       task = Woro::Task.new(task_name)
       if task.exists?
+        adapter = config.adapter adapter_name
         result = adapter.push(task)
-        say "Uploaded #{task.file_path} to #{result['url']}"
+        say "Uploaded `#{task.file_path} to #{result['url']}"
       else
-        say "Task #{task.task_name} not found at #{task.file_path}"
+        say "Task `#{task.task_name}` not found at `#{task.file_path}`"
       end
     end
   end
@@ -142,7 +136,7 @@ command :pull do |c|
   c.syntax      = 'woro pull <task> [options]'
   c.summary     = 'Pull Woro task from remote repository'
   c.description = 'Pulls one task from the remote collection. Existing local tasks can be overwritten.'
-  c.example 'Pulls the task "cleanup" from the remote collection', 'woro pull gist:cleanup'
+  c.example 'Pulls the task "cleanup" from the remote collection', 'woro pull ftp:cleanup'
   c.option '--[no-]force', 'force overwrite of existing task file'
   c.action do |args, options|
     abort 'Woro environment is not set up. Call `woro init` to do so.' unless woro_environment_setup?
@@ -150,7 +144,7 @@ command :pull do |c|
     config = Woro::Configuration.load
     args.each do |arg|
       unless arg.include?(':')
-        say_error "Does not specify download target"
+        say_error "Does not specify download service, eg `woro pull ftp:#{arg}`"
         next
       end
       adapter_name, task_name = arg.split(':')
@@ -169,26 +163,26 @@ command :list do |c|
   c.syntax      = 'woro [list|ls] [options]'
   c.description = 'List tasks'
   c.example 'List remote tasks', 'woro list'
-  c.example 'List all tasks', 'woro list --all'
-  c.option '-a', '--all', 'List all tasks'
+  #c.example 'List all tasks', 'woro list --all'
+  #c.option '-a', '--all', 'List all tasks'
   c.action do |args, options|
     abort 'Woro environment is not set up. Call `woro init` to do so.' unless woro_environment_setup?
     abort "invalid command. See 'woro help' for more information" unless args.empty?
     config = Woro::Configuration.load
-    config.adapters.each do |adapter_config|
-      puts "#{adapter_config[0]} ---"
-      adapter = config.adapter(adapter_config[0])
-      files = adapter.list_keys || {}
+    config.adapter_settings.each do |adapter_setting|
+      say "#{adapter_setting[0]} ---"
+      adapter = config.adapter(adapter_setting[0])
+      files = adapter.list_contents || {}
       tasks = files.map do |file_name, data|
         if file_name.include? '.rake'
           OpenStruct.new(name_with_args: file_name.split('.rake').first,
-                         comment: adapter.extract_description(data))
+                         comment: adapter.extract_description(data[:data]))
         end
       end
       tasks.compact!
       Woro::TaskHelper.print_task_list(tasks)
     end
-    puts "local ---"
+    say "local ---"
     tasks = Woro::TaskHelper.woro_task_files(config.woro_task_dir) do |file_name, data|
       OpenStruct.new(name_with_args: file_name.split('.rake').first,
                      comment: Woro::TaskHelper.extract_description(data))
