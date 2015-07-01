@@ -17,6 +17,7 @@ Using a mina deployment setup, these tasks are downloaded on the remote system, 
 By default Woro comes with support for FTP, but additional adapters are available:
 
 * [woro-gist](https://github.com/github/woro-gist)
+* [woro-s3](https://github.com/github/woro-s3)
 
 ## Installation
 
