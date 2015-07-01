@@ -61,7 +61,7 @@ end
 def choose_and_build_adapter_config(available_adapters)
   adapter_name = select_choice available_adapters
   adapter = Object.const_get "Woro::Adapters::#{adapter_name}"
-  { adapter_name => adapter.setup }
+  { adapter_name.downcase => adapter.setup }
 end
 
 command :init do |c|
@@ -74,7 +74,7 @@ command :init do |c|
     begin
       adapters.merge! choose_and_build_adapter_config(available_adapters)
     end while agree('Do you want to configure another service?')
-    options.default(adapters: adapters )
+    options.default('adapters' => adapters )
 
     create_required_files
 
