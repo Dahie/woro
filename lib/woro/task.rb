@@ -10,6 +10,8 @@ module Woro
       @task_name = Woro::Task.sanitize_task_name task_name
     end
 
+    # Create new Task, creates vanilla task file in the woro
+    # task directory.
     # @param task_name [String] sanitized name of the task, used
     # throughout the further processing
     # @return [Task] the created task
@@ -24,25 +26,28 @@ module Woro
     end
 
     # File name based on the task's name.
-    # @return [String]
+    # @return [String] taskname with extension
     def file_name
       "#{task_name}.rake"
     end
 
     # File name based on the task's filename (see #file_name).
-    # @return [String]
+    # @return [String] taskname with extension and relative path
     def file_path
       File.join 'lib', 'woro_tasks', file_name
     end
 
-    # Returns true if a task of this name exists locally
+    # Returns true, if a task of this name exists locally
+    # @return [boolean] task file exists locally
     def exists?
       File.exist? file_path
     end
 
+    # Read template and inject new name
+    # @return [String] source code for new task
     def build_task_template
       b = binding
-      template = ERB.new(Woro::TaskHelper.read_template_file).result(b)
+      ERB.new(Woro::TaskHelper.read_template_file).result(b)
     end
 
     # Creates a new rake task file at the file path (see #file_path).

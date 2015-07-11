@@ -2,6 +2,10 @@
 
 Write once, run once.
 
+[![Gem Version](https://img.shields.io/gem/v/woro.svg)](https://rubygems.org/gems/woro)
+[![Gem Downloads](https://img.shields.io/gem/dt/woro.svg)](https://rubygems.org/gems/woro)
+[![Yard Docs](http://img.shields.io/badge/yard-docs-blue.svg)](http://rubydoc.info/github/dahie/woro)
+
 Manage one-time remote tasks in your Rails project.
 Plugins with Mina and Capistrano to add support for rake tasks hosted in remote collection, such as Gist.
 
