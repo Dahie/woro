@@ -23,47 +23,6 @@ executed by rake and cleaned up afterwards.'
 
 default_command :list
 
-def create_directory_unless_existing(directory)
-  unless File.exists? directory
-    FileUtils.mkdir_p directory
-    say "Created `#{directory}`"
-  end
-end
-
-def create_required_files
-  create_directory_unless_existing Woro::Configuration.woro_task_dir
-  create_directory_unless_existing Woro::Configuration.rake_task_dir
-  create_directory_unless_existing File.dirname(Woro::Configuration.config_file)
-
-  unless File.exists? File.join(Woro::Configuration.rake_task_dir, 'woro.rake')
-    FileUtils.cp(File.dirname(__FILE__) + '/../lib/woro/templates/woro.rake',
-                 Woro::Configuration.rake_task_dir)
-    say "Created `woro.rake` in `#{Woro::Configuration.rake_task_dir}`"
-  end
-end
-
-def woro_environment_setup?
-  File.exists?(Woro::Configuration.woro_task_dir) &&
-    File.exists?(File.join('config', 'woro.yml')) &&
-    File.exists?(Woro::Configuration.rake_task_dir) &&
-    File.exists?(File.join(Woro::Configuration.rake_task_dir, 'woro.rake'))
-end
-
-def select_choice(choices)
-  choose do |menu|
-    menu.prompt = 'Please choose a service to use with Woro:'
-    menu.choices(*choices) do |choice|
-      return choice.to_s.strip
-    end
-  end
-end
-
-def choose_and_build_adapter_config(available_adapters)
-  adapter_name = select_choice available_adapters
-  adapter = Object.const_get "Woro::Adapters::#{adapter_name}"
-  { adapter_name.downcase => adapter.setup }
-end
-
 command :init do |c|
   c.syntax      = 'woro init [options]'
   c.description = 'Initialize Woro in the current Rails directory and setup Gist collection'
@@ -72,13 +31,12 @@ command :init do |c|
     available_adapters = Woro::Adapters.constants.reject { |name| name == :Base }
     adapters = {}
     begin
-      adapters.merge! choose_and_build_adapter_config(available_adapters)
+      adapters.merge! Woro::TaskHelper.choose_and_build_adapter_config(available_adapters)
     end while agree('Do you want to configure another service?')
     options.default('adapters' => adapters )
 
-    create_required_files
-
-    config = Woro::Configuration.save(options.__hash__)
+    Woro::TaskHelper.create_required_files
+    Woro::Configuration.save(options.__hash__)
   end
 end
 
@@ -90,9 +48,9 @@ command :new do |c|
   c.example 'Creates tasks called "cleanup", "fix1" and "fix2"', 'woro new cleanup fix1 fix2'
   c.option '--[no-]force', 'force overwrite of existing task file'
   c.action do |args, options|
-    abort 'Woro environment is not set up. Call `woro init` to do so.' unless woro_environment_setup?
+    abort 'Woro environment is not set up. Call `woro init` to do so.' unless Woro::TaskHelper.woro_environment_setup?
 
-    config = Woro::Configuration.load
+    Woro::Configuration.load
     force_overwrite = options.force
     args.each do |task_name|
       task = Woro::Task.new(task_name)
@@ -111,7 +69,7 @@ command :push do |c|
   c.description = 'Pushes one or more local tasks to the remote collection. Existing tasks by this name in the remote connection will be updated.'
   c.example 'Pushes the task "cleanup" to the remote collection', 'woro push ftp:cleanup'
   c.action do |args, options|
-    abort 'Woro environment is not set up. Call `woro init` to do so.' unless woro_environment_setup?
+    abort 'Woro environment is not set up. Call `woro init` to do so.' unless Woro::TaskHelper.woro_environment_setup?
 
     config = Woro::Configuration.load
     args.each do |arg|
@@ -140,7 +98,7 @@ command :pull do |c|
   c.example 'Pulls the task "cleanup" from the remote collection', 'woro pull ftp:cleanup'
   c.option '--[no-]force', 'force overwrite of existing task file'
   c.action do |args, options|
-    abort 'Woro environment is not set up. Call `woro init` to do so.' unless woro_environment_setup?
+    abort 'Woro environment is not set up. Call `woro init` to do so.' unless Woro::TaskHelper.woro_environment_setup?
 
     config = Woro::Configuration.load
     args.each do |arg|
@@ -167,7 +125,7 @@ command :list do |c|
   #c.example 'List all tasks', 'woro list --all'
   #c.option '-a', '--all', 'List all tasks'
   c.action do |args, options|
-    abort 'Woro environment is not set up. Call `woro init` to do so.' unless woro_environment_setup?
+    abort 'Woro environment is not set up. Call `woro init` to do so.' unless Woro::TaskHelper.woro_environment_setup?
     abort "invalid command. See 'woro help' for more information" unless args.empty?
     config = Woro::Configuration.load
     config.adapter_settings.each do |adapter_setting|

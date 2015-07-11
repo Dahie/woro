@@ -20,6 +20,7 @@ Feature: Configure woro
     Please choose a service to use with Woro:
     FTP Host: FTP User: FTP Passwod: FTP Folder: |/| Do you want to configure another service?
     Created `lib/woro_tasks`
+    Created `lib/woro_tasks/.gitignore`
     Created `lib/tasks`
     Created `config`
     Created `woro.rake` in `lib/tasks`
@@ -31,6 +32,7 @@ Feature: Configure woro
       | lib/tasks           |
     And the following files should exist:
       | lib/tasks/woro.rake |
+    And the file "lib/woro_tasks/.gitignore" should contain "*.rake"
 
   Scenario: Initialize configuration (no clobber)
     Given a file named "config/woro.yml" with:
