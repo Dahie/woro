@@ -17,7 +17,7 @@ namespace :woro do
 
         info "Execute #{task.task_name} remotely"
         within File.join(release_path, 'lib', 'tasks') do
-          execute :curl, "'#{adapter.raw_url(task.file_name)}'",  '-o', "woro_#{task.file_name}"
+          execute :curl, '-sS', "'#{adapter.raw_url(task.file_name)}'",  '-o', "woro_#{task.file_name}"
         end
         within release_path do
           with rails_env: fetch(:rails_env) do

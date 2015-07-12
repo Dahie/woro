@@ -111,7 +111,7 @@ command :pull do |c|
       task = Woro::Task.new(task_name)
       force_overwrite = options.force
       if !task.exists? || force_overwrite || agree("Overwrite existing #{task.file_path}?")
-        system "cd '#{config.woro_task_dir}' && curl -sS #{adapter.raw_url(task.file_name)} > #{task.file_path}"
+        system "cd '#{config.woro_task_dir}' && curl -sSO #{adapter.raw_url(task.file_name)}" # > #{task.file_path}"
         say "Downloaded `#{task.task_name}` to `#{task.file_path}`"
       end
     end
