@@ -7,7 +7,7 @@ Write once, run once.
 [![Yard Docs](http://img.shields.io/badge/yard-docs-blue.svg)](http://rubydoc.info/github/dahie/woro)
 
 Manage one-time remote tasks in your Rails project.
-Plugins with Mina and Capistrano to add support for rake tasks hosted in remote collection, such as Gist.
+Plugins with Mina and Capistrano to add support for rake tasks hosted in remote collection, such as FTP, Gist or S3.
 
 Say you have a data migration to perform on a remote server. The procedure is too complex to just do it in the remote console and using database migrations would be evil. A rake task would be nice, but checking this in with the source code repository adds clutter, as you know you will only run this once.
 Woro offers a quick way of pushing rake tasks onto the remote server, execute them and delete them instantly.
@@ -22,6 +22,8 @@ By default Woro comes with support for FTP, but additional adapters are availabl
 
 * [woro-gist](https://github.com/github/woro-gist)
 * [woro-s3](https://github.com/github/woro-s3)
+
+Add them as dependency to your `Gemfile` and they become available in woro.
 
 ## Installation
 
@@ -56,6 +58,12 @@ Gist id.
 It also creates the `lib/woro_tasks/` folder and `lib/tasks/woro.rake`.
 Here the Woro task files are stored, edited locally and run using rake.
 
+_The idea of the Woro tasks is, that these are a one time thing and are
+not required to be checked in with the repository. Therefore,
+`lib/woro_tasks/` includes a `.gitignore` file to ignore rake tasks in
+this directory._
+
+
 ### for use with Mina
 
 Require `mina/woro` in your `config/deploy.rb`:
@@ -84,6 +92,7 @@ require 'capistrano/woro'
 
 ```shell
 $ woro new cleanup_users
+$ woro create cleanup_users
 ```
 
 Can be used to create the template for a new task in `lib/woro_tasks/`.
@@ -138,8 +147,7 @@ The project classes are tested through rspec.
 $ rspec
 ```
 
-The command line interface
-is tested through cucmber/aruba.
+The command line interface is tested through cucmber/aruba.
 
 ```shell
 $ cucumber
