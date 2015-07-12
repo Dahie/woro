@@ -76,13 +76,6 @@ module Woro
         { adapter_name.downcase => adapter.setup }
       end
 
-      def print_task_list(tasks)
-        width ||= tasks.map { |t| t.name_with_args.length }.max || 10
-        tasks.each do |t|
-          say "  %-#{width}s   # %s" % [ t.name_with_args, t.comment ]
-        end
-      end
-
       # Perform an action over all files within the woro task directory
       # @param directory [String] directory
       # @return [Array] List of rake tasks in the directory
@@ -95,15 +88,6 @@ module Woro
           end
         end
         tasks
-      end
-
-      # Extract description from gist's data content string.
-      # @param data [Hash] gist data hash
-      # [String] description string
-      def extract_description(task_content)
-        # regex from http://stackoverflow.com/questions/171480/regex-grabbing-values-between-quotation-marks
-        match = task_content.match(/desc (["'])((?:(?!\1)[^\\]|(?:\\\\)*\\[^\\])*)\1/)
-        match && match[2] || 'No description'
       end
 
       # Read the rake task template

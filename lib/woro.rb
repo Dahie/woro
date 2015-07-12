@@ -1,6 +1,7 @@
 require 'woro/version'
 require 'woro/task_helper'
 require 'woro/task'
+require 'woro/task_list'
 require 'woro/adapters/base'
 require 'woro/adapters/ftp'
 require 'woro/configuration'

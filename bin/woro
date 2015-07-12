@@ -125,28 +125,8 @@ command :list do |c|
   #c.example 'List all tasks', 'woro list --all'
   #c.option '-a', '--all', 'List all tasks'
   c.action do |args, options|
-    abort 'Woro environment is not set up. Call `woro init` to do so.' unless Woro::TaskHelper.woro_environment_setup?
-    abort "invalid command. See 'woro help' for more information" unless args.empty?
-    config = Woro::Configuration.load
-    config.adapter_settings.each do |adapter_setting|
-      say "#{adapter_setting[0]} ---"
-      adapter = config.adapter(adapter_setting[0])
-      files = adapter.list_contents || {}
-      tasks = files.map do |file_name, data|
-        if file_name.include? '.rake'
-          OpenStruct.new(name_with_args: file_name.split('.rake').first,
-                         comment: adapter.extract_description(data[:data]))
-        end
-      end
-      tasks.compact!
-      Woro::TaskHelper.print_task_list(tasks)
-    end
-    say "local ---"
-    tasks = Woro::TaskHelper.woro_task_files(config.woro_task_dir) do |file_name, data|
-      OpenStruct.new(name_with_args: file_name.split('.rake').first,
-                     comment: Woro::TaskHelper.extract_description(data))
-    end
-    Woro::TaskHelper.print_task_list(tasks)
+    Woro::TaskHelper.check_environment
+    Woro::TaskList.new(Woro::Configuration.load).fill.print
   end
 end
 alias_command :ls, :list

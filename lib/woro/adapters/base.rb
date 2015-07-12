@@ -8,7 +8,7 @@ module Woro
       # @param content [String] content of task file
       # [String] description string
       def extract_description(content)
-        Woro::TaskHelper.extract_description content
+        Woro::TaskList.extract_description content
       end
 
       # Returns the list of files included in the Gist
