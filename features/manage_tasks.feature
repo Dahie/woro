@@ -41,7 +41,7 @@ Feature: Manage Woro task
   Scenario: Create local task
     Given the Woro environment is set up
     When I run `woro new cleanup`
-    And the output should contain "Created lib/woro_tasks/cleanup.rake"
+    And the output should contain "Created `lib/woro_tasks/cleanup.rake`"
 
   Scenario: Push local task to remote without environment
     When I run `woro push stub:cleanup`
