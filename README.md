@@ -20,8 +20,8 @@ Using a mina deployment setup, these tasks are downloaded on the remote system, 
 
 By default Woro comes with support for FTP, but additional adapters are available:
 
-* [woro-gist](https://github.com/github/woro-gist)
-* [woro-s3](https://github.com/github/woro-s3)
+* [woro-gist](https://github.com/dahie/woro-gist)
+* [woro-s3](https://github.com/dahie/woro-s3)
 
 Add them as dependency to your `Gemfile` and they become available in woro.
 
